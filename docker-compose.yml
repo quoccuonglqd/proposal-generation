@@ -1,0 +1,87 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: cherry-db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: cherry
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d cherry"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: cherry-redis
+    ports:
+      - "6379:6379"
+
+  minio:
+    image: minio/minio
+    container_name: cherry-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cherry-backend
+    ports:
+      - "5008:5008"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=db;Database=cherry;Username=admin;Password=password
+      - Jwt__Secret=A_Very_Long_And_Super_Secret_Key_For_Cherry_Project_JWT_2026
+      - Jwt__Issuer=CherryApi
+      - Jwt__Audience=CherryFrontend
+      - Jwt__ExpiryInMinutes=1440
+      - Storage__BasePath=/app/Storage
+      - SeedData__Admin__Email=admin@cherry.com
+      - SeedData__Admin__Password=Admin123!
+      - SeedData__Admin__DisplayName=System Administrator
+      - SeedData__Creator__Email=creator@cherry.com
+      - SeedData__Creator__Password=Creator123!
+      - SeedData__Creator__DisplayName=Proposal Creator
+      - SeedData__Viewer__Email=viewer@cherry.com
+      - SeedData__Viewer__Password=Viewer123!
+      - SeedData__Viewer__DisplayName=Guest Viewer
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - backend-storage:/app/Storage
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cherry-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5008/api/v1
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  minio-data:
+  backend-storage:

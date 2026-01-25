@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cherry.Api", "Cherry.Api\Cherry.Api.csproj", "{6A540481-75EC-46B0-A622-C013AF65DF5E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cherry.Worker.Pptx", "Cherry.Worker.Pptx\Cherry.Worker.Pptx.csproj", "{A028D017-033E-43F1-BD61-BAFC86BAF3A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cherry.Worker.Pdf", "Cherry.Worker.Pdf\Cherry.Worker.Pdf.csproj", "{66A86AC4-77F3-4711-81E9-B1DC578E4392}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cherry.Core", "Cherry.Core\Cherry.Core.csproj", "{D249192C-804B-454B-B4E7-90417F0516A7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cherry.Infrastructure", "Cherry.Infrastructure\Cherry.Infrastructure.csproj", "{4F0CD83E-1D53-4927-8305-931A21BE42E3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6A540481-75EC-46B0-A622-C013AF65DF5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A540481-75EC-46B0-A622-C013AF65DF5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A540481-75EC-46B0-A622-C013AF65DF5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A540481-75EC-46B0-A622-C013AF65DF5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A028D017-033E-43F1-BD61-BAFC86BAF3A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A028D017-033E-43F1-BD61-BAFC86BAF3A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A028D017-033E-43F1-BD61-BAFC86BAF3A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A028D017-033E-43F1-BD61-BAFC86BAF3A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66A86AC4-77F3-4711-81E9-B1DC578E4392}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66A86AC4-77F3-4711-81E9-B1DC578E4392}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66A86AC4-77F3-4711-81E9-B1DC578E4392}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66A86AC4-77F3-4711-81E9-B1DC578E4392}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D249192C-804B-454B-B4E7-90417F0516A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D249192C-804B-454B-B4E7-90417F0516A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D249192C-804B-454B-B4E7-90417F0516A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D249192C-804B-454B-B4E7-90417F0516A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F0CD83E-1D53-4927-8305-931A21BE42E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F0CD83E-1D53-4927-8305-931A21BE42E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F0CD83E-1D53-4927-8305-931A21BE42E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F0CD83E-1D53-4927-8305-931A21BE42E3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
