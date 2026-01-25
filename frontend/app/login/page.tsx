@@ -89,11 +89,6 @@ export default function LoginPage() {
                     </Button>
                 </form>
 
-                <Box sx={{ mt: 1, textAlign: 'center' }}>
-                    <Typography variant="caption" color="text.secondary">
-                        Hint: Use admin@cherry.com / Admin123!
-                    </Typography>
-                </Box>
             </Paper>
         </Container>
     );
