@@ -115,29 +115,37 @@ namespace Cherry.Infrastructure.Data
                         UpdatedAt = DateTime.UtcNow
                     };
                     
-                    proposal.Sections.Add(new ProposalSection 
-                    { 
-                        SectionKey = "Executive_Summary", 
-                        Order = 1, 
-                        ContentJson = "{\"en\": \"This is a seeded executive summary for the demo client.\"}" 
-                    });
-                    proposal.Sections.Add(new ProposalSection 
-                    { 
-                        SectionKey = "Regional_Pricing", 
-                        Order = 2, 
-                        ContentJson = "{\"en\": \"Pricing overview for Vietnam region.\"}" 
-                    });
-                    proposal.Sections.Add(new ProposalSection 
-                    { 
-                        SectionKey = "Next_Steps", 
-                        Order = 3, 
-                        ContentJson = "{\"en\": \"Contact your relationship manager to proceed.\"}" 
-                    });
 
                     context.Proposals.Add(proposal);
                     await context.SaveChangesAsync();
                     Console.WriteLine("+++ Seeded Demo Proposal with default sections.");
                 }
+            }
+
+            // Seed Master Sections
+            if (!context.MasterSections.Any())
+            {
+                context.MasterSections.AddRange(
+                    new MasterSection { 
+                        SectionKey = "Executive_Summary", 
+                        Name = "Executive Summary", 
+                        SortOrder = 1, 
+                        DefaultContentJson = "{\"en\": [{\"title\": \"Executive Summary\", \"content\": \"Enter executive summary here...\", \"backgroundAssetId\": \"assets/bg_exec_summary.jpg\"}], \"vn\": [{\"title\": \"Tóm tắt điều hành\", \"content\": \"Nhập tóm tắt điều hành tại đây...\", \"backgroundAssetId\": \"assets/bg_exec_summary.jpg\"}]}" 
+                    },
+                    new MasterSection { 
+                        SectionKey = "Regional_Pricing", 
+                        Name = "Regional Pricing", 
+                        SortOrder = 2, 
+                        DefaultContentJson = "{\"en\": [{\"title\": \"Regional Pricing\", \"content\": \"Pricing details for the region...\"}], \"vn\": [{\"title\": \"Chi tiết giá\", \"content\": \"Chi tiết giá cho khu vực...\"}]}" 
+                    },
+                    new MasterSection { 
+                        SectionKey = "Next_Steps", 
+                        Name = "Next Steps", 
+                        SortOrder = 3, 
+                        DefaultContentJson = "{\"en\": [{\"title\": \"Next Steps\", \"content\": \"Contact your relationship manager to proceed.\"}], \"vn\": [{\"title\": \"Các bước tiếp theo\", \"content\": \"Liên hệ với người quản lý quan hệ của bạn để tiếp tục.\"}]}" 
+                    }
+                );
+                await context.SaveChangesAsync();
             }
         }
 

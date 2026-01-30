@@ -45,6 +45,16 @@ namespace Cherry.Core.Entities
         public string Status { get; set; } = "Active";
     }
 
+    public class MasterSection
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public string SectionKey { get; set; } = string.Empty; // e.g. "Executive_Summary"
+        public string Name { get; set; } = string.Empty;
+        public string DefaultContentJson { get; set; } = "{}";
+        public int SortOrder { get; set; }
+        public bool IsActive { get; set; } = true;
+    }
+
     public class ExchangeRateRule
     {
         public Guid Id { get; set; } = Guid.NewGuid();

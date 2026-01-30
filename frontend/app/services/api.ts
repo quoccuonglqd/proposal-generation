@@ -60,5 +60,12 @@ const adminApi = {
     updateUserRoles: (id: string, roles: string[]) => api.put(`/users/${id}/roles`, { roles }),
 };
 
-export { authApi, proposalApi, catalogApi, templateApi, adminApi };
+const masterSectionsApi = {
+    list: () => api.get('/admin/sections'),
+    create: (data: any) => api.post('/admin/sections', data),
+    update: (id: string, data: any) => api.put(`/admin/sections/${id}`, data),
+    delete: (id: string) => api.delete(`/admin/sections/${id}`),
+};
+
+export { authApi, proposalApi, catalogApi, templateApi, adminApi, masterSectionsApi };
 export default api;

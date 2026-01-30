@@ -33,6 +33,7 @@ const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, href: '/admin' },
     { text: 'Regions', icon: <RegionIcon />, href: '/admin/regions' },
     { text: 'Services & Pricing', icon: <ServiceIcon />, href: '/admin/services' },
+    { text: 'Proposal Sections', icon: <TemplateIcon />, href: '/admin/sections' },
     { text: 'Templates', icon: <TemplateIcon />, href: '/admin/templates' },
     { text: 'Exchange Rates', icon: <RateIcon />, href: '/admin/exchange-rates' },
     { text: 'Users', icon: <UserIcon />, href: '/admin/users' },

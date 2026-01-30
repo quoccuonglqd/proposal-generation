@@ -64,10 +64,23 @@ namespace Cherry.Infrastructure.Services
                     var presentationPart = doc.PresentationPart;
                     if (presentationPart != null)
                     {
+                        // 1. Process Master Slides
+                        foreach (var masterPart in presentationPart.SlideMasterParts)
+                        {
+                            ReplacePlaceholdersInPart(masterPart, version);
+                            
+                            // 2. Process Layout Slides (often linked from masters)
+                            foreach (var layoutPart in masterPart.SlideLayoutParts)
+                            {
+                                ReplacePlaceholdersInPart(layoutPart, version);
+                            }
+                        }
+
+                        // 3. Process Individual Slides
                         foreach (var slideId in presentationPart.Presentation.SlideIdList!.Elements<SlideId>())
                         {
                             var slidePart = (SlidePart)presentationPart.GetPartById(slideId.RelationshipId!);
-                            ReplacePlaceholders(slidePart, version);
+                            ReplacePlaceholdersInPart(slidePart, version);
                         }
                     }
                     doc.Save();
@@ -116,60 +129,132 @@ namespace Cherry.Infrastructure.Services
             }
         }
 
-        private void ReplacePlaceholders(SlidePart slidePart, ProposalVersion version)
+        private void ReplacePlaceholdersInPart(OpenXmlPart part, ProposalVersion version)
         {
-            var textElements = slidePart.Slide.Descendants<DocumentFormat.OpenXml.Drawing.Text>().ToList();
-            foreach (var text in textElements)
+            // Resolve the root element that contains drawings/paragraphs
+            DocumentFormat.OpenXml.OpenXmlCompositeElement? root = null;
+            if (part is SlidePart sp) root = sp.Slide;
+            else if (part is SlideLayoutPart slp) root = slp.SlideLayout;
+            else if (part is SlideMasterPart smp) root = smp.SlideMaster;
+
+            if (root == null) return;
+
+            var paragraphs = root.Descendants<DocumentFormat.OpenXml.Drawing.Paragraph>().ToList();
+            var language = version.Proposal.DefaultLanguage ?? "en";
+
+            foreach (var para in paragraphs)
             {
-                var content = text.Text;
-                
-                // Basic Proposal Data
-                if (content.Contains("{{proposal.clientName}}"))
-                    content = content.Replace("{{proposal.clientName}}", version.Proposal.ClientName);
-                
-                if (content.Contains("{{proposal.date}}"))
-                    content = content.Replace("{{proposal.date}}", version.Proposal.UpdatedAt.ToString("dd MMM yyyy"));
+                var textElements = para.Descendants<DocumentFormat.OpenXml.Drawing.Text>().ToList();
+                if (!textElements.Any()) continue;
 
-                if (content.Contains("{{proposal.region}}"))
-                    content = content.Replace("{{proposal.region}}", version.Proposal.Region.Name);
+                // Aggregate full text to handle placeholders split across elements
+                var fullText = string.Concat(textElements.Select(t => t.Text));
+                var originalText = fullText;
 
-                // Services List (Simplified as a multi-line string for now)
-                if (content.Contains("{{services.list}}"))
+                // 1. Basic Proposal Data
+                fullText = fullText.Replace("{{proposal.clientName}}", version.Proposal.ClientName);
+                fullText = fullText.Replace("{{proposal.date}}", version.Proposal.UpdatedAt.ToString("dd MMM yyyy"));
+                fullText = fullText.Replace("{{proposal.region}}", version.Proposal.Region.Name);
+
+                // 2. Services List
+                if (fullText.Contains("{{services.list}}"))
                 {
                     var servicesText = string.Join("\n", version.Proposal.ServiceSelections.Select(s => $"- {s.Service.Name} (Qty: {s.Quantity})"));
-                    content = content.Replace("{{services.list}}", servicesText);
+                    fullText = fullText.Replace("{{services.list}}", servicesText);
                 }
 
-                // Section Contents
-                foreach (var section in version.Proposal.Sections)
+                // 3. Section Contents (Indexed: {{section.KEY.INDEX.FIELD}})
+                var indexedMatches = System.Text.RegularExpressions.Regex.Matches(fullText, @"\{\{section\.([a-zA-Z0-9_-]+)\.(\d+)\.(title|content)\}\}");
+                foreach (System.Text.RegularExpressions.Match match in indexedMatches)
                 {
-                    var placeholder = $"{{{{section.{section.SectionKey}.content}}}}";
-                    if (content.Contains(placeholder))
-                    {
-                        try 
-                        {
-                            var contentObj = JsonSerializer.Deserialize<Dictionary<string, string>>(section.ContentJson);
-                            
-                            // 1. Try language-specific (TODO: dynamic language)
-                            string? textVal = null;
-                            if (contentObj != null)
-                            {
-                                if (contentObj.ContainsKey("en")) textVal = contentObj["en"];
-                                else if (contentObj.ContainsKey("text")) textVal = contentObj["text"];
-                                else textVal = contentObj.Values.FirstOrDefault(); // Fallback to first string
-                            }
+                    var val = GetContentValue(version, match.Groups[1].Value, language, int.Parse(match.Groups[2].Value), match.Groups[3].Value);
+                    if (val != null) fullText = fullText.Replace(match.Value, val);
+                }
 
-                            if (!string.IsNullOrEmpty(textVal))
+                // 4. Section Contents (Legacy: {{section.KEY.content}})
+                var legacyMatches = System.Text.RegularExpressions.Regex.Matches(fullText, @"\{\{section\.([a-zA-Z0-9_-]+)\.content\}\}");
+                foreach (System.Text.RegularExpressions.Match match in legacyMatches)
+                {
+                    var val = GetContentValue(version, match.Groups[1].Value, language, null, "content");
+                    if (val != null) fullText = fullText.Replace(match.Value, val);
+                }
+
+                // If text changed, update OpenXml elements
+                if (fullText != originalText)
+                {
+                    var paragraph = textElements[0].Ancestors<DocumentFormat.OpenXml.Drawing.Paragraph>().FirstOrDefault();
+                    if (paragraph != null)
+                    {
+                        // Remove all existing runs and breaks
+                        var runsToRemove = paragraph.Elements<DocumentFormat.OpenXml.Drawing.Run>().ToList();
+                        var breaksToRemove = paragraph.Elements<DocumentFormat.OpenXml.Drawing.Break>().ToList();
+                        
+                        // Capture formatting from the first run if it exists
+                        var firstRunProps = runsToRemove.FirstOrDefault()?.RunProperties;
+
+                        foreach (var r in runsToRemove) r.Remove();
+                        foreach (var b in breaksToRemove) b.Remove();
+
+                        // Split by newline and reconstruct
+                        var lines = fullText.Split('\n');
+                        for (int i = 0; i < lines.Length; i++)
+                        {
+                            var run = new DocumentFormat.OpenXml.Drawing.Run();
+                            if (firstRunProps != null)
                             {
-                                content = content.Replace(placeholder, textVal);
+                                run.RunProperties = (DocumentFormat.OpenXml.Drawing.RunProperties)firstRunProps.CloneNode(true);
+                            }
+                            run.AppendChild(new DocumentFormat.OpenXml.Drawing.Text(lines[i]));
+                            paragraph.AppendChild(run);
+
+                            if (i < lines.Length - 1)
+                            {
+                                paragraph.AppendChild(new DocumentFormat.OpenXml.Drawing.Break());
                             }
                         }
-                        catch { /* Ignore malformed JSON */ }
                     }
                 }
-
-                text.Text = content;
             }
+        }
+
+        private string? GetContentValue(ProposalVersion version, string sectionKey, string language, int? index, string field)
+        {
+            var section = version.Proposal.Sections.FirstOrDefault(s => s.SectionKey == sectionKey);
+            if (section == null) return null;
+
+            try 
+            {
+                using var doc = JsonDocument.Parse(section.ContentJson);
+                
+                // Try target language, fallback to English
+                if (!doc.RootElement.TryGetProperty(language, out var langRoot))
+                {
+                    if (!doc.RootElement.TryGetProperty("en", out langRoot)) return null;
+                }
+
+                if (index.HasValue)
+                {
+                    // Case: {{section.KEY.INDEX.FIELD}} - Expecting Array of Objects
+                    if (langRoot.ValueKind == JsonValueKind.Array && index.Value < langRoot.GetArrayLength())
+                    {
+                        var item = langRoot[index.Value];
+                        if (item.TryGetProperty(field, out var prop)) return prop.GetString();
+                    }
+                }
+                else
+                {
+                    // Case: {{section.KEY.content}} - Handle both String and Array of Objects
+                    if (langRoot.ValueKind == JsonValueKind.String) return langRoot.GetString();
+                    if (langRoot.ValueKind == JsonValueKind.Array && langRoot.GetArrayLength() > 0)
+                    {
+                        var first = langRoot[0];
+                        if (first.TryGetProperty("content", out var prop)) return prop.GetString();
+                    }
+                }
+            }
+            catch { /* Ignore malformed JSON */ }
+
+            return null;
         }
 
         public Task ConvertPptxToPdfAsync(Guid artifactId)

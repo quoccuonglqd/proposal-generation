@@ -131,14 +131,35 @@ using (var scope = app.Services.CreateScope())
                 }
             }
 
-            // Simple Schema Migration: Add missing columns if they don't exist
+            // Use EF Core Migrations to ensure all tables exist
+            try
+            {
+                Console.WriteLine("=== Running EF Core Migrations ===");
+                await context.Database.MigrateAsync();
+                Console.WriteLine("=== Migrations Completed ===");
+            }
+            catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P07") // duplicate_table
+            {
+                Console.WriteLine("=== Tables already exist, skipping migration ===");
+            }
+            
+            // Simple Schema Migration: Add missing columns/tables if they don't exist (for backward compatibility)
             try 
             {
                 await context.Database.ExecuteSqlRawAsync("ALTER TABLE \"Templates\" ADD COLUMN IF NOT EXISTS \"Category\" text DEFAULT 'Standard'");
                 await context.Database.ExecuteSqlRawAsync("ALTER TABLE \"Templates\" ADD COLUMN IF NOT EXISTS \"RegionId\" uuid");
                 await context.Database.ExecuteSqlRawAsync("ALTER TABLE \"Proposals\" ADD COLUMN IF NOT EXISTS \"TemplateId\" uuid");
+                
+                // Create MasterSections table if it doesn't exist
+                Console.WriteLine("Creating MasterSections table if not exists...");
+                var createTableSql = "CREATE TABLE IF NOT EXISTS \"MasterSections\" (\"Id\" uuid NOT NULL PRIMARY KEY, \"SectionKey\" text NOT NULL, \"Name\" text NOT NULL, \"DefaultContentJson\" text NOT NULL, \"SortOrder\" integer NOT NULL DEFAULT 0, \"IsActive\" boolean NOT NULL DEFAULT true)";
+                await context.Database.ExecuteSqlRawAsync(createTableSql);
+                Console.WriteLine("MasterSections table created successfully.");
             }
-            catch { /* Ignore if fails */ }
+            catch (Exception ex) 
+            { 
+                Console.WriteLine($"Schema migration warning: {ex.Message}");
+            }
         }
         
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();

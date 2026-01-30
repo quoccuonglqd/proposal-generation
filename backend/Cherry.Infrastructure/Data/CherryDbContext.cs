@@ -20,6 +20,7 @@ namespace Cherry.Infrastructure.Data
         public DbSet<ProposalServiceSelection> ProposalServiceSelections { get; set; }
         public DbSet<ProposalVersion> ProposalVersions { get; set; }
         public DbSet<ProposalArtifact> ProposalArtifacts { get; set; }
+        public DbSet<MasterSection> MasterSections { get; set; }
         public DbSet<Template> Templates { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
