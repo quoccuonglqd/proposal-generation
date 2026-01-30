@@ -24,7 +24,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import ServiceSelection from '../../components/ServiceSelection';
 import SectionEditor from '../../components/SectionEditor';
 
-const steps = ['Basic Info & Region', 'Select Services', 'Configure Sections', 'Generation Settings'];
+const steps = ['Basic Info & Region', 'Select Services', 'Generation Settings'];
 
 function ProposalWizardContent() {
     const router = useRouter();
@@ -119,16 +119,7 @@ function ProposalWizardContent() {
             if (proposalId) {
                 await proposalApi.updateMetadata(proposalId, { clientName, regionId: selectedRegion });
                 await proposalApi.updateServices(proposalId, selectedServices);
-                await proposalApi.updateSectionsOrder(proposalId, sections.map(s => s.key));
-                for (const section of sections) {
-                    await proposalApi.updateSectionContent(proposalId, section.key, {
-                        background: {
-                            type: section.backgroundType || 'None',
-                            assetId: section.backgroundAssetId
-                        },
-                        content: section.content
-                    });
-                }
+
             }
             router.push('/proposals');
         } catch (err) {
@@ -195,27 +186,12 @@ function ProposalWizardContent() {
             case 2:
                 return (
                     <Box>
-                        {proposalId ? (
-                            <SectionEditor
-                                proposalId={proposalId}
-                                sections={sections}
-                                onChange={setSections}
-                            />
-                        ) : (
-                            <Typography color="error">Proposal not created yet.</Typography>
-                        )}
-                    </Box>
-                );
-            case 3:
-                return (
-                    <Box>
                         <Card>
                             <CardContent>
                                 <Typography variant="h6" gutterBottom>Summary</Typography>
                                 <Typography><strong>Client:</strong> {clientName}</Typography>
                                 <Typography><strong>Region:</strong> {regions.find(r => r.id === selectedRegion)?.name || 'N/A'}</Typography>
                                 <Typography><strong>Services:</strong> {selectedServices.length}</Typography>
-                                <Typography><strong>Sections:</strong> {sections.length}</Typography>
 
                                 <FormControl fullWidth sx={{ mt: 3 }}>
                                     <InputLabel>Generation Type</InputLabel>

@@ -30,4 +30,21 @@ namespace Cherry.Core.Dtos
         decimal UsdReferencePrice, 
         DateTime EffectiveFrom
     );
+
+    public record MasterSectionDto(
+        Guid Id,
+        string SectionKey,
+        string Name,
+        object DefaultContent,
+        int SortOrder,
+        bool IsActive
+    );
+
+    public record UpsertMasterSectionRequest(
+        string SectionKey,
+        string Name,
+        object DefaultContent,
+        int SortOrder,
+        bool IsActive = true
+    );
 }

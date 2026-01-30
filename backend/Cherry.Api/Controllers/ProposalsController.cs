@@ -150,17 +150,23 @@ namespace Cherry.Api.Controllers
                 _context.Proposals.Add(p);
             }
 
-            // Ensure default sections exist if none are found
+            // Populate sections from MasterSections defined in Admin Console
             if (!p.Sections.Any())
             {
-                Console.WriteLine($"[DEBUG] Adding default sections to Proposal {p.Id}");
-                p.Sections.Add(new ProposalSection { SectionKey = "Executive_Summary", Order = 1, ContentJson = "{ \"en\": \"Enter summary here...\" }" });
-                p.Sections.Add(new ProposalSection { SectionKey = "Regional_Pricing", Order = 2, ContentJson = "{ \"en\": \"Pricing details...\" }" });
-                p.Sections.Add(new ProposalSection { SectionKey = "Next_Steps", Order = 3, ContentJson = "{ \"en\": \"Next steps...\" }" });
-            }
-            else 
-            {
-                Console.WriteLine($"[DEBUG] Proposal {p.Id} already has {p.Sections.Count} sections.");
+                var masterSections = await _context.MasterSections
+                    .Where(ms => ms.IsActive)
+                    .OrderBy(ms => ms.SortOrder)
+                    .ToListAsync();
+                
+                foreach (var ms in masterSections)
+                {
+                    p.Sections.Add(new ProposalSection 
+                    { 
+                        SectionKey = ms.SectionKey, 
+                        Order = ms.SortOrder, 
+                        ContentJson = ms.DefaultContentJson 
+                    });
+                }
             }
 
             await _context.SaveChangesAsync();
