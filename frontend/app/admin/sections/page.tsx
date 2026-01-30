@@ -184,6 +184,8 @@ export default function MasterSectionsPage() {
                                         <Stack spacing={2}>
                                             <TextField
                                                 label="Slide Title"
+                                                multiline
+                                                rows={2}
                                                 size="small"
                                                 fullWidth
                                                 value={slide.title || ''}
@@ -212,6 +214,21 @@ export default function MasterSectionsPage() {
                                                     });
                                                 }}
                                             />
+                                            <TextField
+                                                label="Slide Background Asset ID"
+                                                size="small"
+                                                fullWidth
+                                                value={slide.backgroundAssetId || ''}
+                                                onChange={(e) => {
+                                                    const newSlides = [...(editingSection?.defaultContent?.en || [])];
+                                                    newSlides[index] = { ...slide, backgroundAssetId: e.target.value };
+                                                    setEditingSection({
+                                                        ...editingSection,
+                                                        defaultContent: { ...editingSection.defaultContent, en: newSlides }
+                                                    });
+                                                }}
+                                                helperText="Asset ID from the library (optional)"
+                                            />
                                         </Stack>
                                     </Box>
                                 ))}
@@ -222,7 +239,7 @@ export default function MasterSectionsPage() {
                                         const currentSlides = Array.isArray(editingSection?.defaultContent?.en) ? editingSection?.defaultContent?.en : [];
                                         setEditingSection({
                                             ...editingSection,
-                                            defaultContent: { ...editingSection.defaultContent, en: [...currentSlides, { title: '', content: '' }] }
+                                            defaultContent: { ...editingSection.defaultContent, en: [...currentSlides, { title: '', content: '', backgroundAssetId: '' }] }
                                         });
                                     }}
                                 >
@@ -253,6 +270,8 @@ export default function MasterSectionsPage() {
                                         <Stack spacing={2}>
                                             <TextField
                                                 label="Slide Title"
+                                                multiline
+                                                rows={2}
                                                 size="small"
                                                 fullWidth
                                                 value={slide.title || ''}
@@ -281,6 +300,21 @@ export default function MasterSectionsPage() {
                                                     });
                                                 }}
                                             />
+                                            <TextField
+                                                label="Slide Background Asset ID"
+                                                size="small"
+                                                fullWidth
+                                                value={slide.backgroundAssetId || ''}
+                                                onChange={(e) => {
+                                                    const newSlides = [...(editingSection?.defaultContent?.vn || [])];
+                                                    newSlides[index] = { ...slide, backgroundAssetId: e.target.value };
+                                                    setEditingSection({
+                                                        ...editingSection,
+                                                        defaultContent: { ...editingSection.defaultContent, vn: newSlides }
+                                                    });
+                                                }}
+                                                helperText="Asset ID from the library (optional)"
+                                            />
                                         </Stack>
                                     </Box>
                                 ))}
@@ -291,7 +325,7 @@ export default function MasterSectionsPage() {
                                         const currentSlides = Array.isArray(editingSection?.defaultContent?.vn) ? editingSection?.defaultContent?.vn : [];
                                         setEditingSection({
                                             ...editingSection,
-                                            defaultContent: { ...editingSection.defaultContent, vn: [...currentSlides, { title: '', content: '' }] }
+                                            defaultContent: { ...editingSection.defaultContent, vn: [...currentSlides, { title: '', content: '', backgroundAssetId: '' }] }
                                         });
                                     }}
                                 >

@@ -130,7 +130,7 @@ namespace Cherry.Infrastructure.Data
                         SectionKey = "Executive_Summary", 
                         Name = "Executive Summary", 
                         SortOrder = 1, 
-                        DefaultContentJson = "{\"en\": [{\"title\": \"Executive Summary\", \"content\": \"Enter executive summary here...\"}], \"vn\": [{\"title\": \"Tóm tắt điều hành\", \"content\": \"Nhập tóm tắt điều hành tại đây...\"}]}" 
+                        DefaultContentJson = "{\"en\": [{\"title\": \"Executive Summary\", \"content\": \"Enter executive summary here...\", \"backgroundAssetId\": \"assets/bg_exec_summary.jpg\"}], \"vn\": [{\"title\": \"Tóm tắt điều hành\", \"content\": \"Nhập tóm tắt điều hành tại đây...\", \"backgroundAssetId\": \"assets/bg_exec_summary.jpg\"}]}" 
                     },
                     new MasterSection { 
                         SectionKey = "Regional_Pricing", 

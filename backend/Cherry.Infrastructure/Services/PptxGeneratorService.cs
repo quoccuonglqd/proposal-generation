@@ -182,11 +182,36 @@ namespace Cherry.Infrastructure.Services
                 // If text changed, update OpenXml elements
                 if (fullText != originalText)
                 {
-                    // Put all replaced text into the first element and clear others
-                    textElements[0].Text = fullText;
-                    for (int i = 1; i < textElements.Count; i++)
+                    var paragraph = textElements[0].Ancestors<DocumentFormat.OpenXml.Drawing.Paragraph>().FirstOrDefault();
+                    if (paragraph != null)
                     {
-                        textElements[i].Text = string.Empty;
+                        // Remove all existing runs and breaks
+                        var runsToRemove = paragraph.Elements<DocumentFormat.OpenXml.Drawing.Run>().ToList();
+                        var breaksToRemove = paragraph.Elements<DocumentFormat.OpenXml.Drawing.Break>().ToList();
+                        
+                        // Capture formatting from the first run if it exists
+                        var firstRunProps = runsToRemove.FirstOrDefault()?.RunProperties;
+
+                        foreach (var r in runsToRemove) r.Remove();
+                        foreach (var b in breaksToRemove) b.Remove();
+
+                        // Split by newline and reconstruct
+                        var lines = fullText.Split('\n');
+                        for (int i = 0; i < lines.Length; i++)
+                        {
+                            var run = new DocumentFormat.OpenXml.Drawing.Run();
+                            if (firstRunProps != null)
+                            {
+                                run.RunProperties = (DocumentFormat.OpenXml.Drawing.RunProperties)firstRunProps.CloneNode(true);
+                            }
+                            run.AppendChild(new DocumentFormat.OpenXml.Drawing.Text(lines[i]));
+                            paragraph.AppendChild(run);
+
+                            if (i < lines.Length - 1)
+                            {
+                                paragraph.AppendChild(new DocumentFormat.OpenXml.Drawing.Break());
+                            }
+                        }
                     }
                 }
             }
