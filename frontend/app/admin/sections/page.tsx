@@ -11,8 +11,9 @@ import {
     Add as AddIcon,
     Edit as EditIcon,
     Delete as DeleteIcon,
+    CloudUpload as CloudUploadIcon
 } from '@mui/icons-material';
-import { masterSectionsApi } from '../../services/api';
+import { masterSectionsApi, assetsApi } from '../../services/api';
 
 export default function MasterSectionsPage() {
     const [sections, setSections] = useState<any[]>([]);
@@ -30,6 +31,23 @@ export default function MasterSectionsPage() {
             console.error(err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleImageUpload = async (file: File, lang: 'en' | 'vn', slideIndex: number) => {
+        try {
+            const res = await assetsApi.upload(file);
+            const assetId = res.data.assetId;
+            const newSlides = [...(editingSection?.defaultContent?.[lang] || [])];
+            newSlides[slideIndex] = { ...newSlides[slideIndex], backgroundAssetId: assetId };
+            setEditingSection({
+                ...editingSection,
+                defaultContent: { ...editingSection.defaultContent, [lang]: newSlides }
+            });
+            setToast({ open: true, message: 'Image uploaded successfully', severity: 'success' });
+        } catch (err) {
+            console.error(err);
+            setToast({ open: true, message: 'Failed to upload image', severity: 'error' });
         }
     };
 
@@ -214,21 +232,59 @@ export default function MasterSectionsPage() {
                                                     });
                                                 }}
                                             />
-                                            <TextField
-                                                label="Slide Background Asset ID"
-                                                size="small"
-                                                fullWidth
-                                                value={slide.backgroundAssetId || ''}
-                                                onChange={(e) => {
-                                                    const newSlides = [...(editingSection?.defaultContent?.en || [])];
-                                                    newSlides[index] = { ...slide, backgroundAssetId: e.target.value };
-                                                    setEditingSection({
-                                                        ...editingSection,
-                                                        defaultContent: { ...editingSection.defaultContent, en: newSlides }
-                                                    });
-                                                }}
-                                                helperText="Asset ID from the library (optional)"
-                                            />
+                                            <Box>
+                                                <Typography variant="caption" color="textSecondary" sx={{ mb: 1, display: 'block' }}>Slide Background</Typography>
+                                                {slide.backgroundAssetId ? (
+                                                    <Box sx={{ position: 'relative', width: 'fit-content' }}>
+                                                        <img
+                                                            src={assetsApi.getDownloadUrl(slide.backgroundAssetId)}
+                                                            alt="Background"
+                                                            style={{ height: 80, borderRadius: 4, display: 'block', border: '1px solid #ddd' }}
+                                                        />
+                                                        <IconButton
+                                                            size="small"
+                                                            color="error"
+                                                            sx={{
+                                                                position: 'absolute',
+                                                                top: -8,
+                                                                right: -8,
+                                                                bgcolor: 'white',
+                                                                boxShadow: 1,
+                                                                '&:hover': { bgcolor: '#f5f5f5' }
+                                                            }}
+                                                            onClick={() => {
+                                                                const newSlides = [...(editingSection?.defaultContent?.en || [])];
+                                                                newSlides[index] = { ...slide, backgroundAssetId: '' };
+                                                                setEditingSection({
+                                                                    ...editingSection,
+                                                                    defaultContent: { ...editingSection.defaultContent, en: newSlides }
+                                                                });
+                                                            }}
+                                                        >
+                                                            <DeleteIcon fontSize="inherit" />
+                                                        </IconButton>
+                                                    </Box>
+                                                ) : (
+                                                    <Button
+                                                        variant="outlined"
+                                                        size="small"
+                                                        component="label"
+                                                        startIcon={<CloudUploadIcon />}
+                                                        sx={{ textTransform: 'none' }}
+                                                    >
+                                                        Upload Background
+                                                        <input
+                                                            type="file"
+                                                            hidden
+                                                            accept="image/*"
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (file) handleImageUpload(file, 'en', index);
+                                                            }}
+                                                        />
+                                                    </Button>
+                                                )}
+                                            </Box>
                                         </Stack>
                                     </Box>
                                 ))}
@@ -300,21 +356,59 @@ export default function MasterSectionsPage() {
                                                     });
                                                 }}
                                             />
-                                            <TextField
-                                                label="Slide Background Asset ID"
-                                                size="small"
-                                                fullWidth
-                                                value={slide.backgroundAssetId || ''}
-                                                onChange={(e) => {
-                                                    const newSlides = [...(editingSection?.defaultContent?.vn || [])];
-                                                    newSlides[index] = { ...slide, backgroundAssetId: e.target.value };
-                                                    setEditingSection({
-                                                        ...editingSection,
-                                                        defaultContent: { ...editingSection.defaultContent, vn: newSlides }
-                                                    });
-                                                }}
-                                                helperText="Asset ID from the library (optional)"
-                                            />
+                                            <Box>
+                                                <Typography variant="caption" color="textSecondary" sx={{ mb: 1, display: 'block' }}>Slide Background</Typography>
+                                                {slide.backgroundAssetId ? (
+                                                    <Box sx={{ position: 'relative', width: 'fit-content' }}>
+                                                        <img
+                                                            src={assetsApi.getDownloadUrl(slide.backgroundAssetId)}
+                                                            alt="Background"
+                                                            style={{ height: 80, borderRadius: 4, display: 'block', border: '1px solid #ddd' }}
+                                                        />
+                                                        <IconButton
+                                                            size="small"
+                                                            color="error"
+                                                            sx={{
+                                                                position: 'absolute',
+                                                                top: -8,
+                                                                right: -8,
+                                                                bgcolor: 'white',
+                                                                boxShadow: 1,
+                                                                '&:hover': { bgcolor: '#f5f5f5' }
+                                                            }}
+                                                            onClick={() => {
+                                                                const newSlides = [...(editingSection?.defaultContent?.vn || [])];
+                                                                newSlides[index] = { ...slide, backgroundAssetId: '' };
+                                                                setEditingSection({
+                                                                    ...editingSection,
+                                                                    defaultContent: { ...editingSection.defaultContent, vn: newSlides }
+                                                                });
+                                                            }}
+                                                        >
+                                                            <DeleteIcon fontSize="inherit" />
+                                                        </IconButton>
+                                                    </Box>
+                                                ) : (
+                                                    <Button
+                                                        variant="outlined"
+                                                        size="small"
+                                                        component="label"
+                                                        startIcon={<CloudUploadIcon />}
+                                                        sx={{ textTransform: 'none' }}
+                                                    >
+                                                        Upload Background
+                                                        <input
+                                                            type="file"
+                                                            hidden
+                                                            accept="image/*"
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (file) handleImageUpload(file, 'vn', index);
+                                                            }}
+                                                        />
+                                                    </Button>
+                                                )}
+                                            </Box>
                                         </Stack>
                                     </Box>
                                 ))}

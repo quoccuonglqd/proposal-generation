@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Grid, Paper, Typography, Box, CircularProgress, Card, CardContent } from '@mui/material';
 import {
     People as UserIcon,
@@ -13,6 +14,7 @@ import { adminApi, proposalApi, catalogApi } from '../services/api';
 export default function AdminDashboard() {
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -28,7 +30,11 @@ export default function AdminDashboard() {
                     proposals: proposals.data.total,
                     regions: regions.data.length
                 });
-            } catch (err) {
+            } catch (err: any) {
+                if (err.response?.status === 401) {
+                    localStorage.removeItem('token');
+                    router.push('/login');
+                }
                 console.error(err);
             } finally {
                 setLoading(false);
@@ -40,9 +46,9 @@ export default function AdminDashboard() {
     if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}><CircularProgress /></Box>;
 
     const cards = [
-        { title: 'Total Users', value: stats.users, icon: <UserIcon color="primary" />, color: '#e3f2fd' },
-        { title: 'Proposals Created', value: stats.proposals, icon: <ProposalIcon color="success" />, color: '#e8f5e9' },
-        { title: 'Active Regions', value: stats.regions, icon: <RegionIcon color="secondary" />, color: '#f3e5f5' },
+        { title: 'Total Users', value: stats?.users ?? 0, icon: <UserIcon color="primary" />, color: '#e3f2fd' },
+        { title: 'Proposals Created', value: stats?.proposals ?? 0, icon: <ProposalIcon color="success" />, color: '#e8f5e9' },
+        { title: 'Active Regions', value: stats?.regions ?? 0, icon: <RegionIcon color="secondary" />, color: '#f3e5f5' },
     ];
 
     return (
