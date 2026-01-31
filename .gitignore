@@ -47,3 +47,7 @@ desktop.ini
 # User-specific / Local development
 *.local.*
 appsettings.local.json
+
+*.jpg
+backend/Cherry.Api/Storage/proposals
+backend/Cherry.Api/Storage/templates

@@ -55,7 +55,7 @@ namespace Cherry.Infrastructure.Services
                 if (template == null) throw new Exception("No active template found");
 
                 var templatePath = _storageService.GetStoragePath(template.StorageKey);
-                var outputPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.pptx");
+                var outputPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"{Guid.NewGuid()}.pptx");
 
                 File.Copy(templatePath, outputPath);
 
@@ -87,7 +87,7 @@ namespace Cherry.Infrastructure.Services
                 }
 
                 // Save artifact
-                using (var stream = new FileStream(outputPath, FileMode.Open))
+                using (var stream = new System.IO.FileStream(outputPath, System.IO.FileMode.Open))
                 {
                     var storageKey = await _storageService.SaveFileAsync(stream, $"Proposal_{version.Proposal.ClientName.Replace(" ", "_")}.pptx", "proposals");
                     
@@ -164,19 +164,60 @@ namespace Cherry.Infrastructure.Services
                 }
 
                 // 3. Section Contents (Indexed: {{section.KEY.INDEX.FIELD}})
-                var indexedMatches = System.Text.RegularExpressions.Regex.Matches(fullText, @"\{\{section\.([a-zA-Z0-9_-]+)\.(\d+)\.(title|content)\}\}");
+                var indexedMatches = System.Text.RegularExpressions.Regex.Matches(fullText, @"\{\{section\.([^.]+)\.(\d+)\.(title|content)\}\}");
                 foreach (System.Text.RegularExpressions.Match match in indexedMatches)
                 {
-                    var val = GetContentValue(version, match.Groups[1].Value, language, int.Parse(match.Groups[2].Value), match.Groups[3].Value);
+                    var sectionKey = match.Groups[1].Value;
+                    var index = int.Parse(match.Groups[2].Value);
+                    var field = match.Groups[3].Value;
+
+                    _logger.LogInformation("Matched indexed placeholder: {SectionKey}, Index: {Index}, Field: {Field}", sectionKey, index, field);
+
+                    var val = GetContentValue(version, sectionKey, language, index, field);
                     if (val != null) fullText = fullText.Replace(match.Value, val);
+
+                    // If we found a title placeholder, also try to apply the background image
+                    if (field == "title" && part is SlidePart slidePart)
+                    {
+                        var backgroundAssetId = GetSlideBackgroundId(version, sectionKey, language, index);
+                        if (!string.IsNullOrEmpty(backgroundAssetId))
+                        {
+                            ApplyBackgroundToSlide(slidePart, backgroundAssetId);
+                        }
+                    }
                 }
 
                 // 4. Section Contents (Legacy: {{section.KEY.content}})
-                var legacyMatches = System.Text.RegularExpressions.Regex.Matches(fullText, @"\{\{section\.([a-zA-Z0-9_-]+)\.content\}\}");
+                var legacyMatches = System.Text.RegularExpressions.Regex.Matches(fullText, @"\{\{section\.([^.]+)\.content\}\}");
                 foreach (System.Text.RegularExpressions.Match match in legacyMatches)
                 {
-                    var val = GetContentValue(version, match.Groups[1].Value, language, null, "content");
+                    var sectionKey = match.Groups[1].Value;
+                    _logger.LogInformation("Matched legacy placeholder: {SectionKey}", sectionKey);
+                    
+                    var val = GetContentValue(version, sectionKey, language, null, "content");
+                    if (val == null && sectionKey.Contains("_"))
+                    {
+                        // Try space normalization
+                        val = GetContentValue(version, sectionKey.Replace("_", " "), language, null, "content");
+                    }
+                    
                     if (val != null) fullText = fullText.Replace(match.Value, val);
+
+                    // For legacy placeholders, try applying background to index 0
+                    if (part is SlidePart slidePart)
+                    {
+                        var backgroundAssetId = GetSlideBackgroundId(version, sectionKey, language, 0);
+                        if (string.IsNullOrEmpty(backgroundAssetId) && sectionKey.Contains("_"))
+                        {
+                            backgroundAssetId = GetSlideBackgroundId(version, sectionKey.Replace("_", " "), language, 0);
+                        }
+
+                        if (!string.IsNullOrEmpty(backgroundAssetId))
+                        {
+                            _logger.LogInformation("Applying background for legacy section {SectionKey} from asset {AssetId}", sectionKey, backgroundAssetId);
+                            ApplyBackgroundToSlide(slidePart, backgroundAssetId);
+                        }
+                    }
                 }
 
                 // If text changed, update OpenXml elements
@@ -220,6 +261,13 @@ namespace Cherry.Infrastructure.Services
         private string? GetContentValue(ProposalVersion version, string sectionKey, string language, int? index, string field)
         {
             var section = version.Proposal.Sections.FirstOrDefault(s => s.SectionKey == sectionKey);
+            if (section == null && sectionKey.Contains("_"))
+            {
+                // Try space normalization if the key has underscores but the DB might have spaces
+                var normalizedKey = sectionKey.Replace("_", " ");
+                section = version.Proposal.Sections.FirstOrDefault(s => s.SectionKey == normalizedKey);
+            }
+
             if (section == null) return null;
 
             try 
@@ -255,6 +303,87 @@ namespace Cherry.Infrastructure.Services
             catch { /* Ignore malformed JSON */ }
 
             return null;
+        }
+
+        private string? GetSlideBackgroundId(ProposalVersion version, string sectionKey, string language, int index)
+        {
+            var section = version.Proposal.Sections.FirstOrDefault(s => s.SectionKey == sectionKey);
+            if (section == null && sectionKey.Contains("_"))
+            {
+                var normalizedKey = sectionKey.Replace("_", " ");
+                section = version.Proposal.Sections.FirstOrDefault(s => s.SectionKey == normalizedKey);
+            }
+
+            if (section == null) return null;
+
+            try
+            {
+                using var doc = JsonDocument.Parse(section.ContentJson);
+                if (!doc.RootElement.TryGetProperty(language, out var langRoot))
+                {
+                    if (!doc.RootElement.TryGetProperty("en", out langRoot)) return null;
+                }
+
+                if (langRoot.ValueKind == JsonValueKind.Array && index < langRoot.GetArrayLength())
+                {
+                    var item = langRoot[index];
+                    if (item.TryGetProperty("backgroundAssetId", out var prop)) return prop.GetString();
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        private void ApplyBackgroundToSlide(SlidePart slidePart, string backgroundAssetId)
+        {
+            try
+            {
+                var storagePath = _storageService.GetStoragePath(backgroundAssetId);
+                if (!File.Exists(storagePath))
+                {
+                    _logger.LogWarning("Background asset physical file not found at {Path}", storagePath);
+                    return;
+                }
+
+                // 1. Ensure Background element exists and is the FIRST child
+                if (slidePart.Slide.CommonSlideData == null) slidePart.Slide.CommonSlideData = new CommonSlideData();
+                
+                var cSld = slidePart.Slide.CommonSlideData;
+                var bg = cSld.Background;
+                if (bg == null)
+                {
+                    bg = new Background();
+                    cSld.InsertAt(bg, 0);
+                }
+
+                // Clear existing background properties AND references to force override
+                bg.RemoveAllChildren<BackgroundProperties>();
+                bg.RemoveAllChildren<BackgroundStyleReference>();
+                
+                var bgPr = new BackgroundProperties();
+                var blipFill = new DocumentFormat.OpenXml.Drawing.BlipFill();
+                var blip = new DocumentFormat.OpenXml.Drawing.Blip();
+                var stretch = new DocumentFormat.OpenXml.Drawing.Stretch(new DocumentFormat.OpenXml.Drawing.FillRectangle());
+
+                // 2. Add Image Part
+                var imagePart = slidePart.AddImagePart(ImagePartType.Png);
+                using (var stream = System.IO.File.OpenRead(storagePath))
+                {
+                    imagePart.FeedData(stream);
+                }
+
+                blip.Embed = slidePart.GetIdOfPart(imagePart);
+                blipFill.Append(blip);
+                blipFill.Append(stretch);
+                bgPr.Append(blipFill);
+                bg.Append(bgPr);
+                
+                _logger.LogInformation("Successfully applied background {AssetId} to slide via ImagePart {PartId}", backgroundAssetId, slidePart.GetIdOfPart(imagePart));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to apply background image {AssetId} to slide", backgroundAssetId);
+            }
         }
 
         public Task ConvertPptxToPdfAsync(Guid artifactId)

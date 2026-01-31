@@ -67,5 +67,16 @@ const masterSectionsApi = {
     delete: (id: string) => api.delete(`/admin/sections/${id}`),
 };
 
-export { authApi, proposalApi, catalogApi, templateApi, adminApi, masterSectionsApi };
+const assetsApi = {
+    upload: (file: File, purpose: string = 'SLIDE_BACKGROUND') => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return api.post(`/assets/upload?purpose=${purpose}`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+    },
+    getDownloadUrl: (storageKey: string) => `${api.defaults.baseURL}/assets/download/${storageKey}`,
+};
+
+export { authApi, proposalApi, catalogApi, templateApi, adminApi, masterSectionsApi, assetsApi };
 export default api;
