@@ -47,8 +47,10 @@ namespace Cherry.Api.Controllers
                 .Where(s => s.ParentId == parentId)
                 .Select(s => new ServiceTreeDto(
                     s.Id,
+                    s.ParentId,
                     s.Name,
                     s.Level.ToString().ToUpper(),
+                    s.Unit,
                     s.Prices.FirstOrDefault() is var p && p != null 
                         ? new PriceDto(p.LocalPrice, p.UsdReferencePrice) 
                         : new PriceDto(0, 0),
@@ -66,11 +68,32 @@ namespace Cherry.Api.Controllers
                 return BadRequest("Invalid service level");
             }
 
+            // Hierarchy Validation
+            if (request.ParentId.HasValue)
+            {
+                var parent = await _context.Services.FindAsync(request.ParentId.Value);
+                if (parent == null) return BadRequest("Parent not found");
+
+                if (parent.Level == ServiceLevel.Main && level != ServiceLevel.Sub)
+                    return BadRequest("Main services can only contain Sub services.");
+                
+                if (parent.Level == ServiceLevel.Sub && (level != ServiceLevel.Range && level != ServiceLevel.LineItem))
+                    return BadRequest("Sub services can only contain Range or Line Item services.");
+
+                if (parent.Level == ServiceLevel.Range || parent.Level == ServiceLevel.LineItem)
+                    return BadRequest("Range or Line Item services cannot have children.");
+            }
+            else if (level != ServiceLevel.Main)
+            {
+                return BadRequest("Root services must be of type Main.");
+            }
+
             var service = new Service
             {
                 ParentId = request.ParentId,
                 Level = level,
                 Name = request.Name,
+                Unit = request.Unit,
                 SortOrder = request.SortOrder,
                 IsActive = request.IsActive
             };
@@ -93,9 +116,30 @@ namespace Cherry.Api.Controllers
                 return BadRequest("Invalid service level");
             }
 
+            // Hierarchy Validation
+            if (request.ParentId.HasValue)
+            {
+                var parent = await _context.Services.FindAsync(request.ParentId.Value);
+                if (parent == null) return BadRequest("Parent not found");
+
+                if (parent.Level == ServiceLevel.Main && level != ServiceLevel.Sub)
+                    return BadRequest("Main services can only contain Sub services.");
+                
+                if (parent.Level == ServiceLevel.Sub && (level != ServiceLevel.Range && level != ServiceLevel.LineItem))
+                    return BadRequest("Sub services can only contain Range or Line Item services.");
+
+                if (parent.Level == ServiceLevel.Range || parent.Level == ServiceLevel.LineItem)
+                    return BadRequest("Range or Line Item services cannot have children.");
+            }
+            else if (level != ServiceLevel.Main)
+            {
+                return BadRequest("Root services must be of type Main.");
+            }
+
             service.ParentId = request.ParentId;
             service.Level = level;
             service.Name = request.Name;
+            service.Unit = request.Unit;
             service.SortOrder = request.SortOrder;
             service.IsActive = request.IsActive;
 
@@ -130,6 +174,40 @@ namespace Cherry.Api.Controllers
             await _context.SaveChangesAsync();
 
             return Ok();
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteService(Guid id)
+        {
+            var service = await _context.Services
+                .Include(s => s.Children)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (service == null) return NotFound();
+
+            // Recursively delete children if any
+            await DeleteServiceHierarchy(service);
+
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        private async Task DeleteServiceHierarchy(Service service)
+        {
+            // Load children to ensure they are tracked and can be deleted
+            await _context.Entry(service).Collection(s => s.Children).LoadAsync();
+            
+            foreach (var child in service.Children.ToList())
+            {
+                await DeleteServiceHierarchy(child);
+            }
+
+            // Delete associated prices
+            var prices = await _context.ServicePrices.Where(p => p.ServiceId == service.Id).ToListAsync();
+            _context.ServicePrices.RemoveRange(prices);
+
+            _context.Services.Remove(service);
         }
     }
 }

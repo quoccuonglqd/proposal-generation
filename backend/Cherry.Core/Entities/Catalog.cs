@@ -15,7 +15,8 @@ namespace Cherry.Core.Entities
     {
         Main = 1,
         Sub = 2,
-        Range = 3
+        Range = 3,
+        LineItem = 4
     }
 
     public class Service
@@ -25,6 +26,7 @@ namespace Cherry.Core.Entities
         public Service? Parent { get; set; }
         public ServiceLevel Level { get; set; }
         public string Name { get; set; } = string.Empty;
+        public string? Unit { get; set; }
         public int SortOrder { get; set; }
         public bool IsActive { get; set; } = true;
         public ICollection<Service> Children { get; set; } = new List<Service>();

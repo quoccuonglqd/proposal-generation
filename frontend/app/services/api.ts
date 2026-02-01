@@ -41,6 +41,7 @@ const catalogApi = {
     getServiceTree: (regionId: string) => api.get(`/services/tree?regionId=${regionId}`),
     upsertService: (data: any) => data.id ? api.put(`/services/${data.id}`, data) : api.post('/services', data),
     upsertPrice: (data: any) => api.put('/services/prices', data),
+    deleteService: (id: string) => api.delete(`/services/${id}`),
 };
 
 const templateApi = {

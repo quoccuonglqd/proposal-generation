@@ -55,20 +55,24 @@ namespace Cherry.Infrastructure.Data
 
             // Seed Services and Prices with "Upsert" logic
             var entitySetup = await GetOrCreateService(context, null, ServiceLevel.Main, "Entity Setup", 1);
-            var accounting = await GetOrCreateService(context, null, ServiceLevel.Main, "Accounting & Tax", 2);
+            var accounting = await GetOrCreateService(context, null, ServiceLevel.Main, "Accounting & Tax", 2, "Month");
             
             var incorporation = await GetOrCreateService(context, entitySetup.Id, ServiceLevel.Sub, "Company Incorporation", 1);
             var workPermit = await GetOrCreateService(context, entitySetup.Id, ServiceLevel.Sub, "Work Permit", 2);
 
+            var incBasic = await GetOrCreateService(context, incorporation.Id, ServiceLevel.LineItem, "Incorporation Basic", 1, "Project");
+            var incPremium = await GetOrCreateService(context, incorporation.Id, ServiceLevel.LineItem, "Incorporation Premium", 2, "Project");
+
             if (vnRegion != null)
             {
-                await EnsurePrice(context, incorporation.Id, vnRegion.Id, 25000000, 1000);
+                await EnsurePrice(context, incBasic.Id, vnRegion.Id, 25000000, 1000);
+                await EnsurePrice(context, incPremium.Id, vnRegion.Id, 45000000, 1800);
                 await EnsurePrice(context, workPermit.Id, vnRegion.Id, 12000000, 500);
                 await EnsurePrice(context, accounting.Id, vnRegion.Id, 5000000, 200);
             }
             if (thRegion != null)
             {
-                await EnsurePrice(context, incorporation.Id, thRegion.Id, 35000, 1000);
+                await EnsurePrice(context, incBasic.Id, thRegion.Id, 35000, 1000);
                 await EnsurePrice(context, accounting.Id, thRegion.Id, 8000, 250);
             }
 
@@ -169,12 +173,12 @@ namespace Cherry.Infrastructure.Data
             }
         }
 
-        private static async Task<Service> GetOrCreateService(CherryDbContext context, Guid? parentId, ServiceLevel level, string name, int order)
+        private static async Task<Service> GetOrCreateService(CherryDbContext context, Guid? parentId, ServiceLevel level, string name, int order, string? unit = null)
         {
             var s = await context.Services.FirstOrDefaultAsync(x => x.Name == name && x.ParentId == parentId);
             if (s == null)
             {
-                s = new Service { ParentId = parentId, Level = level, Name = name, SortOrder = order, IsActive = true };
+                s = new Service { ParentId = parentId, Level = level, Name = name, SortOrder = order, Unit = unit, IsActive = true };
                 context.Services.Add(s);
                 await context.SaveChangesAsync();
             }

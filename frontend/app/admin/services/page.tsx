@@ -34,6 +34,7 @@ export default function ServicesPricing() {
     const [pricingService, setPricingService] = useState<any>(null);
     const [pricingForm, setPricingForm] = useState({ local: 0, usdRef: 0 });
 
+    const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
     const [toast, setToast] = useState({ open: false, message: '', severity: 'success' as any });
 
     useEffect(() => {
@@ -92,6 +93,18 @@ export default function ServicesPricing() {
         setExpanded(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
     };
 
+    const handleDelete = async () => {
+        if (!deleteConfirm) return;
+        try {
+            await catalogApi.deleteService(deleteConfirm);
+            setDeleteConfirm(null);
+            fetchTree(selectedRegionId);
+            setToast({ open: true, message: 'Service deleted', severity: 'success' });
+        } catch (err) {
+            setToast({ open: true, message: 'Failed to delete service', severity: 'error' });
+        }
+    };
+
     const renderService = (s: any, depth = 0) => (
         <React.Fragment key={s.id}>
             <ListItem
@@ -103,7 +116,13 @@ export default function ServicesPricing() {
             >
                 <ListItemText
                     primary={s.name}
-                    secondary={s.level}
+                    secondary={
+                        <Stack component="span">
+                            <Typography component="span" variant="caption" color="text.secondary">
+                                {s.level} {s.unit ? `• ${s.unit}` : ''}
+                            </Typography>
+                        </Stack>
+                    }
                     primaryTypographyProps={{ fontWeight: 'medium' }}
                 />
                 <ListItemSecondaryAction>
@@ -111,19 +130,52 @@ export default function ServicesPricing() {
                         <Typography variant="body2" color="primary" sx={{ my: 'auto', mr: 2 }}>
                             {s.price.local.toLocaleString()} {regions.find(r => r.id === selectedRegionId)?.localCurrency}
                         </Typography>
-                        <IconButton size="small" onClick={() => {
-                            setPricingService(s);
-                            setPricingForm({ local: s.price.local, usdRef: s.price.usdRef });
-                            setPricingOpen(true);
-                        }} title="Manage Price">
-                            <PriceIcon fontSize="small" color="primary" />
+                        {/* Conditional Pricing: Disable if has children */}
+                        <IconButton
+                            size="small"
+                            onClick={() => {
+                                setPricingService(s);
+                                setPricingForm({ local: s.price.local, usdRef: s.price.usdRef });
+                                setPricingOpen(true);
+                            }}
+                            disabled={s.children?.length > 0}
+                            title={s.children?.length > 0 ? "Cannot price parent services" : "Manage Price"}
+                        >
+                            <PriceIcon fontSize="small" color={s.children?.length > 0 ? "disabled" : "primary"} />
                         </IconButton>
+
+                        {/* Add Child Button: Only for Main and Sub levels */}
+                        {(s.level === 'MAIN' || s.level === 'SUB') && (
+                            <IconButton
+                                size="small"
+                                color="success"
+                                onClick={() => {
+                                    setEditingService({
+                                        name: '',
+                                        level: s.level === 'MAIN' ? 'sub' : 'lineitem',
+                                        parentId: s.id,
+                                        sortOrder: s.children?.length || 0,
+                                        isActive: true
+                                    });
+                                    setEditorOpen(true);
+                                }}
+                                title="Add Child Service"
+                            >
+                                <AddIcon fontSize="small" />
+                            </IconButton>
+                        )}
+
                         <IconButton size="small" onClick={() => {
                             setEditingService({ ...s, level: s.level.toLowerCase() });
                             setEditorOpen(true);
                         }}>
                             <EditIcon fontSize="small" />
                         </IconButton>
+
+                        <IconButton size="small" color="error" onClick={() => setDeleteConfirm(s.id)}>
+                            <DeleteIcon fontSize="small" />
+                        </IconButton>
+
                         {s.children?.length > 0 ? (
                             <IconButton size="small" onClick={() => toggleExpand(s.id)}>
                                 {expanded.includes(s.id) ? <ExpandLess /> : <ExpandMore />}
@@ -141,7 +193,7 @@ export default function ServicesPricing() {
                     </List>
                 </Collapse>
             )}
-        </React.Fragment>
+        </React.Fragment >
     );
 
     return (
@@ -192,6 +244,13 @@ export default function ServicesPricing() {
                                 onChange={(e) => setEditingService({ ...editingService, name: e.target.value })}
                                 required
                             />
+                            <TextField
+                                label="Unit"
+                                placeholder="e.g. Month, Person, Project"
+                                fullWidth
+                                value={editingService?.unit || ''}
+                                onChange={(e) => setEditingService({ ...editingService, unit: e.target.value })}
+                            />
                             <FormControl fullWidth>
                                 <InputLabel>Level</InputLabel>
                                 <Select
@@ -201,6 +260,8 @@ export default function ServicesPricing() {
                                 >
                                     <MenuItem value="main">Main Service</MenuItem>
                                     <MenuItem value="sub">Sub Service</MenuItem>
+                                    <MenuItem value="range">Range (Level 3)</MenuItem>
+                                    <MenuItem value="lineitem">Line Item (Level 3)</MenuItem>
                                 </Select>
                             </FormControl>
                             <TextField
@@ -252,6 +313,18 @@ export default function ServicesPricing() {
                     </Button>
                 </Box>
             </Drawer>
+
+            {/* Deletion Confirmation */}
+            <Dialog open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)}>
+                <DialogTitle>Delete Service</DialogTitle>
+                <DialogContent>
+                    <Typography>Are you sure you want to delete this service? All its children and associated prices will also be permanently removed.</Typography>
+                </DialogContent>
+                <DialogActions sx={{ p: 3 }}>
+                    <Button onClick={() => setDeleteConfirm(null)}>Cancel</Button>
+                    <Button onClick={handleDelete} variant="contained" color="error">Delete</Button>
+                </DialogActions>
+            </Dialog>
 
             <Snackbar open={toast.open} autoHideDuration={3000} onClose={() => setToast({ ...toast, open: false })}>
                 <Alert severity={toast.severity}>{toast.message}</Alert>
