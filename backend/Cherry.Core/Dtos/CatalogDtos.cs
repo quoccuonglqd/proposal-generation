@@ -7,8 +7,10 @@ namespace Cherry.Core.Dtos
 
     public record ServiceTreeDto(
         Guid Id, 
+        Guid? ParentId,
         string Name, 
         string Level, 
+        string? Unit,
         PriceDto? Price, 
         List<ServiceTreeDto> Children
     );
@@ -19,6 +21,7 @@ namespace Cherry.Core.Dtos
         Guid? ParentId, 
         string Level, 
         string Name, 
+        string? Unit,
         int SortOrder, 
         bool IsActive = true
     );

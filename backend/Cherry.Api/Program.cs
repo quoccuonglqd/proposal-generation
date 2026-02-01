@@ -149,6 +149,7 @@ using (var scope = app.Services.CreateScope())
                 await context.Database.ExecuteSqlRawAsync("ALTER TABLE \"Templates\" ADD COLUMN IF NOT EXISTS \"Category\" text DEFAULT 'Standard'");
                 await context.Database.ExecuteSqlRawAsync("ALTER TABLE \"Templates\" ADD COLUMN IF NOT EXISTS \"RegionId\" uuid");
                 await context.Database.ExecuteSqlRawAsync("ALTER TABLE \"Proposals\" ADD COLUMN IF NOT EXISTS \"TemplateId\" uuid");
+                await context.Database.ExecuteSqlRawAsync("ALTER TABLE \"Services\" ADD COLUMN IF NOT EXISTS \"Unit\" text");
                 
                 // Create MasterSections table if it doesn't exist
                 Console.WriteLine("Creating MasterSections table if not exists...");
