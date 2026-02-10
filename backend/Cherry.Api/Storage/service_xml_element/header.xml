@@ -1,0 +1,207 @@
+<?xml version="1.0" ?>
+<p:grpSp xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+         xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:nvGrpSpPr>
+    <p:cNvPr id="2" name="object 2"/>
+    <p:cNvGrpSpPr/>
+    <p:nvPr/>
+  </p:nvGrpSpPr>
+
+  <p:grpSpPr>
+    <a:xfrm>
+      <a:off x="155325" y="1365955"/>
+      <a:ext cx="11881697" cy="1042670"/>
+      <a:chOff x="232987" y="2048933"/>
+      <a:chExt cx="17822545" cy="1564005"/>
+    </a:xfrm>
+  </p:grpSpPr>
+
+  <!-- Shape 3: header green bar -->
+  <p:sp>
+    <p:nvSpPr>
+      <p:cNvPr id="3" name="object 3"/>
+      <p:cNvSpPr/>
+      <p:nvPr/>
+    </p:nvSpPr>
+    <p:spPr>
+      <a:xfrm>
+        <a:off x="232981" y="2048941"/>
+        <a:ext cx="17822545" cy="565785"/>
+      </a:xfrm>
+      <a:custGeom>
+        <a:avLst/>
+        <a:gdLst/>
+        <a:ahLst/>
+        <a:cxnLst/>
+        <a:rect l="l" t="t" r="r" b="b"/>
+        <a:pathLst>
+          <a:path w="17822545" h="565785">
+            <a:moveTo><a:pt x="17822025" y="0"/></a:moveTo>
+            <a:lnTo><a:pt x="11603419" y="0"/></a:lnTo>
+            <a:lnTo><a:pt x="8953538" y="0"/></a:lnTo>
+            <a:lnTo><a:pt x="6294755" y="0"/></a:lnTo>
+            <a:lnTo><a:pt x="0" y="0"/></a:lnTo>
+            <a:lnTo><a:pt x="0" y="565442"/></a:lnTo>
+            <a:lnTo><a:pt x="6294762" y="565442"/></a:lnTo>
+            <a:lnTo><a:pt x="8953545" y="565442"/></a:lnTo>
+            <a:lnTo><a:pt x="11603426" y="565442"/></a:lnTo>
+            <a:lnTo><a:pt x="17822032" y="565442"/></a:lnTo>
+            <a:close/>
+          </a:path>
+        </a:pathLst>
+      </a:custGeom>
+      <a:solidFill>
+        <a:srgbClr val="0C5649"/>
+      </a:solidFill>
+      <a:ln><a:noFill/></a:ln>
+    </p:spPr>
+  </p:sp>
+
+  <!-- Shape 6: "Services" -->
+  <p:sp>
+    <p:nvSpPr>
+      <p:cNvPr id="6" name="TextBox 5"/>
+      <p:cNvSpPr txBox="1"/>
+      <p:nvPr/>
+    </p:nvSpPr>
+    <p:spPr>
+      <a:xfrm>
+        <a:off x="440670" y="2180000"/>
+        <a:ext cx="2973434" cy="282893"/>
+      </a:xfrm>
+      <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+      <a:noFill/>
+      <a:ln><a:noFill/></a:ln>
+    </p:spPr>
+    <p:txBody>
+      <a:bodyPr wrap="none" rtlCol="0">
+        <a:spAutoFit/>
+      </a:bodyPr>
+      <a:lstStyle/>
+      <a:p>
+        <a:pPr algn="ctr">
+          <a:lnSpc><a:spcPct val="100000"/></a:lnSpc>
+          <a:spcBef><a:spcPts val="0"/></a:spcBef>
+          <a:spcAft><a:spcPts val="0"/></a:spcAft>
+        </a:pPr>
+        <a:r>
+          <a:rPr sz="1300" b="1">
+            <a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill>
+            <a:latin typeface="Arial"/>
+            <a:cs typeface="Arial"/>
+          </a:rPr>
+          <a:t>Services</a:t>
+        </a:r>
+        <a:endParaRPr sz="1300"/>
+      </a:p>
+    </p:txBody>
+  </p:sp>
+
+  <!-- Shape 7: "Fees (VND)" -->
+  <p:sp>
+    <p:nvSpPr>
+      <p:cNvPr id="7" name="TextBox 6"/>
+      <p:cNvSpPr txBox="1"/>
+      <p:nvPr/>
+    </p:nvSpPr>
+    <p:spPr>
+      <a:xfrm>
+        <a:off x="3667872" y="2180000"/>
+        <a:ext cx="2491419" cy="282893"/>
+      </a:xfrm>
+      <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+      <a:noFill/>
+      <a:ln><a:noFill/></a:ln>
+    </p:spPr>
+    <p:txBody>
+      <a:bodyPr wrap="none" rtlCol="0">
+        <a:spAutoFit/>
+      </a:bodyPr>
+      <a:lstStyle/>
+      <a:p>
+        <a:pPr algn="ctr"/>
+        <a:r>
+          <a:rPr sz="1300" b="1">
+            <a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill>
+            <a:latin typeface="Arial"/>
+            <a:cs typeface="Arial"/>
+          </a:rPr>
+          <a:t>Fees (VND)</a:t>
+        </a:r>
+        <a:endParaRPr sz="1300"/>
+      </a:p>
+    </p:txBody>
+  </p:sp>
+
+  <!-- Shape 8: "Fees (USD)" -->
+  <p:sp>
+    <p:nvSpPr>
+      <p:cNvPr id="8" name="TextBox 7"/>
+      <p:cNvSpPr txBox="1"/>
+      <p:nvPr/>
+    </p:nvSpPr>
+    <p:spPr>
+      <a:xfrm>
+        <a:off x="6159291" y="2180000"/>
+        <a:ext cx="2491419" cy="282893"/>
+      </a:xfrm>
+      <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+      <a:noFill/>
+      <a:ln><a:noFill/></a:ln>
+    </p:spPr>
+    <p:txBody>
+      <a:bodyPr wrap="none" rtlCol="0">
+        <a:spAutoFit/>
+      </a:bodyPr>
+      <a:lstStyle/>
+      <a:p>
+        <a:pPr algn="ctr"/>
+        <a:r>
+          <a:rPr sz="1300" b="1">
+            <a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill>
+            <a:latin typeface="Arial"/>
+            <a:cs typeface="Arial"/>
+          </a:rPr>
+          <a:t>Fees (USD)</a:t>
+        </a:r>
+        <a:endParaRPr sz="1300"/>
+      </a:p>
+    </p:txBody>
+  </p:sp>
+
+  <!-- Shape 9: "Remarks" -->
+  <p:sp>
+    <p:nvSpPr>
+      <p:cNvPr id="9" name="TextBox 8"/>
+      <p:cNvSpPr txBox="1"/>
+      <p:nvPr/>
+    </p:nvSpPr>
+    <p:spPr>
+      <a:xfrm>
+        <a:off x="8650710" y="2180000"/>
+        <a:ext cx="2973434" cy="282893"/>
+      </a:xfrm>
+      <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+      <a:noFill/>
+      <a:ln><a:noFill/></a:ln>
+    </p:spPr>
+    <p:txBody>
+      <a:bodyPr wrap="none" rtlCol="0">
+        <a:spAutoFit/>
+      </a:bodyPr>
+      <a:lstStyle/>
+      <a:p>
+        <a:pPr algn="ctr"/>
+        <a:r>
+          <a:rPr sz="1300" b="1">
+            <a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill>
+            <a:latin typeface="Arial"/>
+            <a:cs typeface="Arial"/>
+          </a:rPr>
+          <a:t>Remarks</a:t>
+        </a:r>
+        <a:endParaRPr sz="1300"/>
+      </a:p>
+    </p:txBody>
+  </p:sp>
+</p:grpSp>

@@ -14,6 +14,8 @@ import {
     CloudUpload as CloudUploadIcon
 } from '@mui/icons-material';
 import { masterSectionsApi, assetsApi } from '../../services/api';
+import RichTextEditor from '../../components/RichTextEditor';
+
 
 export default function MasterSectionsPage() {
     const [sections, setSections] = useState<any[]>([]);
@@ -127,7 +129,7 @@ export default function MasterSectionsPage() {
                             >
                                 <ListItemText
                                     primary={s.name}
-                                    secondary={`Key: ${s.sectionKey} | Order: ${s.sortOrder}`}
+                                    secondary={`Key: ${s.sectionKey}`}
                                     primaryTypographyProps={{ fontWeight: 'medium' }}
                                 />
                                 <ListItemSecondaryAction>
@@ -171,13 +173,6 @@ export default function MasterSectionsPage() {
                                 onChange={(e) => setEditingSection({ ...editingSection, name: e.target.value })}
                                 required
                             />
-                            <TextField
-                                label="Sort Order"
-                                type="number"
-                                fullWidth
-                                value={editingSection?.sortOrder || 0}
-                                onChange={(e) => setEditingSection({ ...editingSection, sortOrder: parseInt(e.target.value) })}
-                            />
 
                             {/* English Slides Editor */}
                             <Typography variant="subtitle1" fontWeight="bold">Slides (English)</Typography>
@@ -216,22 +211,20 @@ export default function MasterSectionsPage() {
                                                     });
                                                 }}
                                             />
-                                            <TextField
-                                                label="Slide Content"
-                                                multiline
-                                                rows={3}
-                                                size="small"
-                                                fullWidth
-                                                value={slide.content || ''}
-                                                onChange={(e) => {
-                                                    const newSlides = [...(editingSection?.defaultContent?.en || [])];
-                                                    newSlides[index] = { ...slide, content: e.target.value };
-                                                    setEditingSection({
-                                                        ...editingSection,
-                                                        defaultContent: { ...editingSection.defaultContent, en: newSlides }
-                                                    });
-                                                }}
-                                            />
+                                            <Box>
+                                                <Typography variant="caption" color="textSecondary" sx={{ mb: 1, display: 'block' }}>Slide Content</Typography>
+                                                <RichTextEditor
+                                                    value={slide.content || ''}
+                                                    onChange={(jsonString) => {
+                                                        const newSlides = [...(editingSection?.defaultContent?.en || [])];
+                                                        newSlides[index] = { ...slide, content: jsonString };
+                                                        setEditingSection({
+                                                            ...editingSection,
+                                                            defaultContent: { ...editingSection.defaultContent, en: newSlides }
+                                                        });
+                                                    }}
+                                                />
+                                            </Box>
                                             <Box>
                                                 <Typography variant="caption" color="textSecondary" sx={{ mb: 1, display: 'block' }}>Slide Background</Typography>
                                                 {slide.backgroundAssetId ? (
@@ -340,22 +333,20 @@ export default function MasterSectionsPage() {
                                                     });
                                                 }}
                                             />
-                                            <TextField
-                                                label="Slide Content"
-                                                multiline
-                                                rows={3}
-                                                size="small"
-                                                fullWidth
-                                                value={slide.content || ''}
-                                                onChange={(e) => {
-                                                    const newSlides = [...(editingSection?.defaultContent?.vn || [])];
-                                                    newSlides[index] = { ...slide, content: e.target.value };
-                                                    setEditingSection({
-                                                        ...editingSection,
-                                                        defaultContent: { ...editingSection.defaultContent, vn: newSlides }
-                                                    });
-                                                }}
-                                            />
+                                            <Box>
+                                                <Typography variant="caption" color="textSecondary" sx={{ mb: 1, display: 'block' }}>Slide Content</Typography>
+                                                <RichTextEditor
+                                                    value={slide.content || ''}
+                                                    onChange={(jsonString) => {
+                                                        const newSlides = [...(editingSection?.defaultContent?.vn || [])];
+                                                        newSlides[index] = { ...slide, content: jsonString };
+                                                        setEditingSection({
+                                                            ...editingSection,
+                                                            defaultContent: { ...editingSection.defaultContent, vn: newSlides }
+                                                        });
+                                                    }}
+                                                />
+                                            </Box>
                                             <Box>
                                                 <Typography variant="caption" color="textSecondary" sx={{ mb: 1, display: 'block' }}>Slide Background</Typography>
                                                 {slide.backgroundAssetId ? (

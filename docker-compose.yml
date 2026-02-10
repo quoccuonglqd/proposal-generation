@@ -65,7 +65,7 @@ services:
       redis:
         condition: service_started
     volumes:
-      - backend-storage:/app/Storage
+      - ./backend/Cherry.Api/Storage:/app/Storage
     restart: unless-stopped
 
   frontend:
@@ -84,4 +84,3 @@ services:
 volumes:
   db-data:
   minio-data:
-  backend-storage:
