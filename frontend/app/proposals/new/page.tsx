@@ -35,6 +35,7 @@ function ProposalWizardContent() {
     const [regions, setRegions] = useState<any[]>([]);
     const [templates, setTemplates] = useState<any[]>([]);
     const [clientName, setClientName] = useState('');
+    const [projectName, setProjectName] = useState('');
     const [selectedRegion, setSelectedRegion] = useState('');
     const [selectedTemplate, setSelectedTemplate] = useState('');
     const [selectedServices, setSelectedServices] = useState<any[]>([]);
@@ -56,6 +57,7 @@ function ProposalWizardContent() {
                 const proposal = res.data;
                 setProposalId(proposal.id);
                 setClientName(proposal.clientName);
+                setProjectName(proposal.projectName);
                 setSelectedRegion(proposal.regionId);
 
                 const services = proposal.serviceSelections.map((s: any) => ({
@@ -88,6 +90,7 @@ function ProposalWizardContent() {
             if (!proposalId) {
                 const res = await proposalApi.create({
                     clientName,
+                    projectName,
                     regionId: selectedRegion,
                     templateId: selectedTemplate || undefined
                 });
@@ -117,7 +120,7 @@ function ProposalWizardContent() {
         setLoading(true);
         try {
             if (proposalId) {
-                await proposalApi.updateMetadata(proposalId, { clientName, regionId: selectedRegion });
+                await proposalApi.updateMetadata(proposalId, { clientName, projectName, regionId: selectedRegion });
                 await proposalApi.updateServices(proposalId, selectedServices);
 
             }
@@ -134,6 +137,14 @@ function ProposalWizardContent() {
             case 0:
                 return (
                     <Box>
+                        <TextField
+                            label="Project Name"
+                            fullWidth
+                            value={projectName}
+                            onChange={(e) => setProjectName(e.target.value)}
+                            sx={{ mb: 3 }}
+                            placeholder="e.g. Q1 IT Infrastructure Expansion"
+                        />
                         <TextField
                             label="Client Name"
                             fullWidth
@@ -189,6 +200,7 @@ function ProposalWizardContent() {
                         <Card>
                             <CardContent>
                                 <Typography variant="h6" gutterBottom>Summary</Typography>
+                                <Typography><strong>Project:</strong> {projectName}</Typography>
                                 <Typography><strong>Client:</strong> {clientName}</Typography>
                                 <Typography><strong>Region:</strong> {regions.find(r => r.id === selectedRegion)?.name || 'N/A'}</Typography>
                                 <Typography><strong>Services:</strong> {selectedServices.length}</Typography>
@@ -252,7 +264,7 @@ function ProposalWizardContent() {
                                 {loading ? 'Saving...' : 'Save Proposal'}
                             </Button>
                         ) : (
-                            <Button variant="contained" onClick={handleNext} disabled={!clientName || !selectedRegion}>
+                            <Button variant="contained" onClick={handleNext} disabled={!clientName || !projectName || !selectedRegion}>
                                 Next
                             </Button>
                         )}
