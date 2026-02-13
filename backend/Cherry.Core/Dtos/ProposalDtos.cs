@@ -3,13 +3,14 @@ using System.Collections.Generic;
 
 namespace Cherry.Core.Dtos
 {
-    public record CreateProposalRequest(string ClientName, Guid RegionId, Guid? TemplateId, string LanguageDefault = "en");
+    public record CreateProposalRequest(string ClientName, string ProjectName, Guid RegionId, Guid? TemplateId, string LanguageDefault = "en");
 
-    public record ProposalSummaryDto(Guid Id, string ClientName, string RegionName, string Status, DateTime UpdatedAt);
+    public record ProposalSummaryDto(Guid Id, string ClientName, string ProjectName, string RegionName, string Status, DateTime UpdatedAt);
 
     public record ProposalDetailDto(
         Guid Id, 
         string ClientName, 
+        string ProjectName,
         Guid RegionId, 
         string Status, 
         string Language,
@@ -25,7 +26,7 @@ namespace Cherry.Core.Dtos
 
     public record ProposalServiceSelectionDto(Guid ServiceId, string ServiceName, decimal Quantity, string? Notes, PriceDto Price);
 
-    public record UpdateProposalMetadataRequest(string ClientName, Guid RegionId);
+    public record UpdateProposalMetadataRequest(string ClientName, string ProjectName, Guid RegionId);
 
     public record BatchDeleteRequest(List<Guid> ProposalIds);
 

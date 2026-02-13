@@ -147,6 +147,7 @@ export default function ProposalsList() {
                                 </TableCell>
                             )}
                             <TableCell>Client Name</TableCell>
+                            <TableCell>Project Name</TableCell>
                             <TableCell>Region</TableCell>
                             <TableCell>Status</TableCell>
                             <TableCell>Last Updated</TableCell>
@@ -172,6 +173,7 @@ export default function ProposalsList() {
                                             </TableCell>
                                         )}
                                         <TableCell sx={{ fontWeight: 'medium' }}>{p.clientName}</TableCell>
+                                        <TableCell>{p.projectName}</TableCell>
                                         <TableCell>{p.regionName}</TableCell>
                                         <TableCell>
                                             <Chip

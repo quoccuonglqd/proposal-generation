@@ -17,6 +17,7 @@ namespace Cherry.Core.Entities
     {
         public Guid Id { get; set; } = Guid.NewGuid();
         public string ClientName { get; set; } = string.Empty;
+        public string ProjectName { get; set; } = string.Empty;
         public Guid RegionId { get; set; }
         public Region Region { get; set; } = null!;
         public ProposalStatus Status { get; set; } = ProposalStatus.Draft;

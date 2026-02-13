@@ -52,7 +52,7 @@ namespace Cherry.Api.Controllers
                 .OrderByDescending(p => p.UpdatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(p => new ProposalSummaryDto(p.Id, p.ClientName, p.Region.Name, p.Status.ToString().ToUpper(), p.UpdatedAt))
+                .Select(p => new ProposalSummaryDto(p.Id, p.ClientName, p.ProjectName, p.Region.Name, p.Status.ToString().ToUpper(), p.UpdatedAt))
                 .ToListAsync();
 
             return Ok(new { Items = items, Total = total, Page = page, PageSize = pageSize });
@@ -117,7 +117,7 @@ namespace Cherry.Api.Controllers
                 }
             }
 
-            return Ok(new ProposalDetailDto(p.Id, p.ClientName, p.RegionId, p.Status.ToString().ToUpper(), p.DefaultLanguage, p.TemplateId, sections, services, artifacts));
+            return Ok(new ProposalDetailDto(p.Id, p.ClientName, p.ProjectName, p.RegionId, p.Status.ToString().ToUpper(), p.DefaultLanguage, p.TemplateId, sections, services, artifacts));
         }
 
         [HttpPost]
@@ -131,6 +131,7 @@ namespace Cherry.Api.Controllers
             if (p != null)
             {
                 // Update existing draft if same client
+                p.ProjectName = request.ProjectName;
                 p.RegionId = request.RegionId;
                 p.TemplateId = request.TemplateId;
                 p.DefaultLanguage = request.LanguageDefault ?? "en";
@@ -141,6 +142,7 @@ namespace Cherry.Api.Controllers
                 p = new Proposal
                 {
                     ClientName = request.ClientName,
+                    ProjectName = request.ProjectName,
                     RegionId = request.RegionId,
                     TemplateId = request.TemplateId,
                     CreatedBy = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "system",
@@ -183,7 +185,7 @@ namespace Cherry.Api.Controllers
                     JsonSerializer.Deserialize<object>(s.ContentJson) ?? new object()))
                 .ToList();
 
-            return Ok(new ProposalDetailDto(p.Id, p.ClientName, p.RegionId, p.Status.ToString().ToUpper(), p.DefaultLanguage, p.TemplateId, sections, new List<ProposalServiceSelectionDto>(), new List<ProposalArtifactDto>()));
+            return Ok(new ProposalDetailDto(p.Id, p.ClientName, p.ProjectName, p.RegionId, p.Status.ToString().ToUpper(), p.DefaultLanguage, p.TemplateId, sections, new List<ProposalServiceSelectionDto>(), new List<ProposalArtifactDto>()));
         }
 
         [HttpPatch("{proposalId:guid}/metadata")]
@@ -194,6 +196,7 @@ namespace Cherry.Api.Controllers
             if (p == null) return NotFound();
 
             p.ClientName = request.ClientName;
+            p.ProjectName = request.ProjectName;
             p.RegionId = request.RegionId;
             p.UpdatedAt = DateTime.UtcNow;
 

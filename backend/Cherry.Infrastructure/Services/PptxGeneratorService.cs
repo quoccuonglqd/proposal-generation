@@ -162,9 +162,15 @@ namespace Cherry.Infrastructure.Services
                 var originalText = fullText;
 
                 // 1. Basic Proposal Data
-                fullText = fullText.Replace("{{proposal.clientName}}", version.Proposal.ClientName);
-                fullText = fullText.Replace("{{proposal.date}}", version.Proposal.UpdatedAt.ToString("dd MMM yyyy"));
-                fullText = fullText.Replace("{{proposal.region}}", version.Proposal.Region.Name);
+                fullText = ReplacePlaceholderRobust(fullText, "proposal.clientName", version.Proposal.ClientName ?? "");
+                fullText = ReplacePlaceholderRobust(fullText, "proposal.date", version.Proposal.UpdatedAt.ToString("dd MMM yyyy"));
+                fullText = ReplacePlaceholderRobust(fullText, "proposal.region", version.Proposal.Region?.Name ?? "");
+
+                // Requested placeholders
+                fullText = ReplacePlaceholderRobust(fullText, "project_name", version.Proposal.ProjectName ?? "");
+                fullText = ReplacePlaceholderRobust(fullText, "client_name", version.Proposal.ClientName ?? "");
+                fullText = ReplacePlaceholderRobust(fullText, "region_name", version.Proposal.Region?.Name ?? "");
+                fullText = ReplacePlaceholderRobust(fullText, "proposal_date", version.Proposal.CreatedAt.ToString("dd MMM yyyy"));
 
                 // 2. Services List
                 if (fullText.Contains("{{services.list}}"))
@@ -1205,6 +1211,22 @@ namespace Cherry.Infrastructure.Services
             shapeTree.AppendChild(graphicFrame);
             
             _logger.LogInformation("Successfully inserted actual PPTX table with {Rows} rows and {Cols} columns", table.Elements<DocumentFormat.OpenXml.Drawing.TableRow>().Count(), maxCols);
+        }
+
+        private string ReplacePlaceholderRobust(string text, string placeholderName, string replacement)
+        {
+            // This pattern finds {{ ... }} and captures the content
+            return Regex.Replace(text, @"\{\{([^{}]+)\}\}", match => 
+            {
+                var content = match.Groups[1].Value;
+                // Strip all whitespace from the content inside {{ }} before comparing
+                var normalizedContent = Regex.Replace(content, @"\s+", "");
+                if (string.Equals(normalizedContent, placeholderName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return replacement;
+                }
+                return match.Value; // No match, return original
+            });
         }
     }
 }
