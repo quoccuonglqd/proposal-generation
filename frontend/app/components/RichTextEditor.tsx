@@ -1,6 +1,6 @@
 "use client";
 
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, Extension } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Underline } from '@tiptap/extension-underline';
 import { Table } from '@tiptap/extension-table';
@@ -15,6 +15,16 @@ import { TaskList } from '@tiptap/extension-task-list';
 import { TaskItem } from '@tiptap/extension-task-item';
 import { CharacterCount } from '@tiptap/extension-character-count';
 import { Mention } from '@tiptap/extension-mention';
+// @ts-ignore
+import { TextAlign } from '@tiptap/extension-text-align';
+// @ts-ignore
+import { Highlight } from '@tiptap/extension-highlight';
+// @ts-ignore
+import { Subscript } from '@tiptap/extension-subscript';
+// @ts-ignore
+import { Superscript } from '@tiptap/extension-superscript';
+// @ts-ignore
+import { HorizontalRule } from '@tiptap/extension-horizontal-rule';
 import { Box, ToggleButton, ToggleButtonGroup, Paper, IconButton, Divider, Tooltip, Select, MenuItem, Typography } from '@mui/material';
 import {
     FormatBold as FormatBoldIcon,
@@ -31,8 +41,56 @@ import {
     AddBox as AddBoxIcon,
     TableRows as TableRowsIcon,
     ViewColumn as ViewColumnIcon,
+    FormatAlignLeft as AlignLeftIcon,
+    FormatAlignCenter as AlignCenterIcon,
+    FormatAlignRight as AlignRightIcon,
+    FormatAlignJustify as AlignJustifyIcon,
+    Undo as UndoIcon,
+    Redo as RedoIcon,
+    Subscript as SubscriptIcon,
+    Superscript as SuperscriptIcon,
+    HorizontalRule as HRIcon,
+    FormatClear as FormatClearIcon,
+    BorderColor as HighlightIcon,
 } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
+
+// Extend TextStyle for FontSize support
+const CustomTextStyle = TextStyle.extend({
+    addAttributes() {
+        return {
+            ...this.parent?.(),
+            fontSize: {
+                default: null,
+                parseHTML: element => element.style.fontSize.replace(/['"]+/g, ''),
+                renderHTML: attributes => {
+                    if (!attributes.fontSize) {
+                        return {};
+                    }
+                    return {
+                        style: `font-size: ${attributes.fontSize}`,
+                    };
+                },
+            },
+        };
+    },
+    addCommands() {
+        return {
+            ...this.parent?.(),
+            setFontSize: (fontSize: string) => ({ chain }: any) => {
+                return chain()
+                    .setMark('textStyle', { fontSize })
+                    .run();
+            },
+            unsetFontSize: () => ({ chain }: any) => {
+                return chain()
+                    .setMark('textStyle', { fontSize: null })
+                    .removeEmptyTextStyle()
+                    .run();
+            },
+        } as any;
+    },
+});
 
 interface RichTextEditorProps {
     value: string; // JSON string from Tiptap or plain text
@@ -51,7 +109,7 @@ const RichTextEditor = ({ value, onChange }: RichTextEditorProps) => {
             TableHeader,
             TableCell,
             Image,
-            TextStyle,
+            CustomTextStyle,
             Color,
             FontFamily,
             TaskList,
@@ -60,6 +118,13 @@ const RichTextEditor = ({ value, onChange }: RichTextEditorProps) => {
             }),
             CharacterCount,
             Mention,
+            TextAlign.configure({
+                types: ['heading', 'paragraph'],
+            }),
+            Highlight.configure({ multicolor: true }),
+            Subscript,
+            Superscript,
+            HorizontalRule,
         ],
         content: '',
         immediatelyRender: false,
@@ -69,7 +134,7 @@ const RichTextEditor = ({ value, onChange }: RichTextEditorProps) => {
         },
         editorProps: {
             attributes: {
-                style: 'min-height: 150px; outline: none; padding: 12px; font-family: inherit; font-size: 0.875rem;',
+                style: 'min-height: 200px; outline: none; padding: 12px; font-family: inherit; font-size: 1rem;',
                 class: 'tiptap',
             },
         },
@@ -112,9 +177,26 @@ const RichTextEditor = ({ value, onChange }: RichTextEditorProps) => {
         }
     };
 
+    const fontSizes = ['12px', '14px', '16px', '18px', '20px', '24px', '32px', '48px'];
+
     return (
         <Paper variant="outlined" sx={{ overflow: 'hidden', border: '1px solid rgba(0, 0, 0, 0.23)', '&:hover': { borderColor: 'rgba(0, 0, 0, 0.87)' } }}>
             <Box sx={{ borderBottom: '1px solid #e0e0e0', p: 0.5, bgcolor: '#f5f5f5', display: 'flex', flexWrap: 'wrap', gap: 0.5, alignItems: 'center' }}>
+                <ToggleButtonGroup size="small">
+                    <Tooltip title="Undo">
+                        <IconButton size="small" onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()}>
+                            <UndoIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Redo">
+                        <IconButton size="small" onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()}>
+                            <RedoIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+                </ToggleButtonGroup>
+
+                <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
+
                 <ToggleButtonGroup size="small">
                     <Tooltip title="Bold">
                         <ToggleButton value="bold" selected={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}>
@@ -131,24 +213,39 @@ const RichTextEditor = ({ value, onChange }: RichTextEditorProps) => {
                             <FormatUnderlinedIcon fontSize="small" />
                         </ToggleButton>
                     </Tooltip>
+                    <Tooltip title="Subscript">
+                        <ToggleButton value="subscript" selected={editor.isActive('subscript')} onClick={() => (editor.chain().focus() as any).toggleSubscript().run()}>
+                            <SubscriptIcon fontSize="small" />
+                        </ToggleButton>
+                    </Tooltip>
+                    <Tooltip title="Superscript">
+                        <ToggleButton value="superscript" selected={editor.isActive('superscript')} onClick={() => (editor.chain().focus() as any).toggleSuperscript().run()}>
+                            <SuperscriptIcon fontSize="small" />
+                        </ToggleButton>
+                    </Tooltip>
                 </ToggleButtonGroup>
 
                 <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
 
                 <ToggleButtonGroup size="small">
-                    <Tooltip title="Bullet List">
-                        <ToggleButton value="bulletList" selected={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()}>
-                            <FormatListBulletedIcon fontSize="small" />
+                    <Tooltip title="Align Left">
+                        <ToggleButton value="left" selected={editor.isActive({ textAlign: 'left' })} onClick={() => (editor.chain().focus() as any).setTextAlign('left').run()}>
+                            <AlignLeftIcon fontSize="small" />
                         </ToggleButton>
                     </Tooltip>
-                    <Tooltip title="Ordered List">
-                        <ToggleButton value="orderedList" selected={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
-                            <FormatListNumberedIcon fontSize="small" />
+                    <Tooltip title="Align Center">
+                        <ToggleButton value="center" selected={editor.isActive({ textAlign: 'center' })} onClick={() => (editor.chain().focus() as any).setTextAlign('center').run()}>
+                            <AlignCenterIcon fontSize="small" />
                         </ToggleButton>
                     </Tooltip>
-                    <Tooltip title="Task List">
-                        <ToggleButton value="taskList" selected={editor.isActive('taskList')} onClick={() => editor.chain().focus().toggleTaskList().run()}>
-                            <TaskListIcon fontSize="small" />
+                    <Tooltip title="Align Right">
+                        <ToggleButton value="right" selected={editor.isActive({ textAlign: 'right' })} onClick={() => (editor.chain().focus() as any).setTextAlign('right').run()}>
+                            <AlignRightIcon fontSize="small" />
+                        </ToggleButton>
+                    </Tooltip>
+                    <Tooltip title="Justify">
+                        <ToggleButton value="justify" selected={editor.isActive({ textAlign: 'justify' })} onClick={() => (editor.chain().focus() as any).setTextAlign('justify').run()}>
+                            <AlignJustifyIcon fontSize="small" />
                         </ToggleButton>
                     </Tooltip>
                 </ToggleButtonGroup>
@@ -167,13 +264,54 @@ const RichTextEditor = ({ value, onChange }: RichTextEditorProps) => {
                     <MenuItem value="Georgia">Georgia</MenuItem>
                 </Select>
 
-                <input
-                    type="color"
-                    onInput={(event) => editor.chain().focus().setColor((event.target as HTMLInputElement).value).run()}
-                    value={editor.getAttributes('textStyle').color || '#000000'}
-                    style={{ width: 30, height: 30, border: 'none', padding: 0, background: 'none', cursor: 'pointer' }}
-                    title="Text Color"
-                />
+                <Select
+                    size="small"
+                    value={editor.getAttributes('textStyle').fontSize || '16px'}
+                    onChange={(e) => (editor.chain().focus() as any).setFontSize(e.target.value).run()}
+                    sx={{ height: 30, fontSize: '0.75rem', minWidth: 70 }}
+                >
+                    {fontSizes.map(size => (
+                        <MenuItem key={size} value={size}>{size}</MenuItem>
+                    ))}
+                </Select>
+
+                <Tooltip title="Text Color">
+                    <Box sx={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+                        <ColorIcon sx={{ fontSize: 18, position: 'absolute', pointerEvents: 'none', ml: 0.5 }} />
+                        <input
+                            type="color"
+                            onInput={(event) => editor.chain().focus().setColor((event.target as HTMLInputElement).value).run()}
+                            value={editor.getAttributes('textStyle').color || '#000000'}
+                            style={{ width: 30, height: 30, border: 'none', padding: 0, background: 'none', cursor: 'pointer', opacity: 0.5 }}
+                        />
+                    </Box>
+                </Tooltip>
+
+                <Tooltip title="Highlight Color">
+                    <Box sx={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+                        <HighlightIcon sx={{ fontSize: 18, position: 'absolute', pointerEvents: 'none', ml: 0.5 }} />
+                        <input
+                            type="color"
+                            onInput={(event) => (editor.chain().focus() as any).toggleHighlight({ color: (event.target as HTMLInputElement).value }).run()}
+                            value={editor.getAttributes('highlight').color || '#ffff00'}
+                            style={{ width: 30, height: 30, border: 'none', padding: 0, background: 'none', cursor: 'pointer', opacity: 0.5 }}
+                        />
+                    </Box>
+                </Tooltip>
+
+                <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
+
+                <Tooltip title="Clear Formatting">
+                    <IconButton size="small" onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}>
+                        <FormatClearIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
+
+                <Tooltip title="Horizontal Rule">
+                    <IconButton size="small" onClick={() => editor.chain().focus().setHorizontalRule().run()}>
+                        <HRIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
 
                 <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
 
@@ -210,11 +348,16 @@ const RichTextEditor = ({ value, onChange }: RichTextEditorProps) => {
                 </Tooltip>
             </Box>
 
-            <Box sx={{ padding: '0 4px' }}>
+            <Box sx={{ padding: '0 4px', bgcolor: 'white' }}>
                 <EditorContent editor={editor} />
             </Box>
 
-            <Box sx={{ p: 0.5, borderTop: '1px solid #e0e0e0', bgcolor: '#fafafa', display: 'flex', justifyContent: 'flex-end' }}>
+            <Box sx={{ p: 0.5, borderTop: '1px solid #e0e0e0', bgcolor: '#fafafa', display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                <Typography variant="caption" color="textSecondary">
+                    {editor.isActive('bold') ? 'Bold ' : ''}
+                    {editor.isActive('italic') ? 'Italic ' : ''}
+                    {editor.isActive('underline') ? 'Underline ' : ''}
+                </Typography>
                 <Typography variant="caption" color="textSecondary">
                     {editor.storage.characterCount.characters()} characters
                 </Typography>
@@ -224,6 +367,8 @@ const RichTextEditor = ({ value, onChange }: RichTextEditorProps) => {
                 .tiptap p { margin: 0; }
                 .tiptap ul, .tiptap ol { margin: 0; padding-left: 20px; }
                 .tiptap li { margin: 0; }
+                .tiptap hr { border: none; border-top: 2px solid #ddd; margin: 1rem 0; }
+                .tiptap mark { background-color: #ffff00; padding: 0 2px; border-radius: 2px; }
                 .tiptap table {
                     border-collapse: collapse;
                     table-layout: fixed;

@@ -880,6 +880,17 @@ namespace Cherry.Infrastructure.Services
 
             if (type == "paragraph" || type == "heading" || type == "listItem")
             {
+                // Handle Alignment
+                if (node.TryGetProperty("attrs", out var attrs) && attrs.TryGetProperty("textAlign", out var alignProp))
+                {
+                    var align = alignProp.GetString();
+                    if (paragraph.ParagraphProperties == null) paragraph.ParagraphProperties = new DocumentFormat.OpenXml.Drawing.ParagraphProperties();
+                    
+                    if (align == "center") paragraph.ParagraphProperties.Alignment = DocumentFormat.OpenXml.Drawing.TextAlignmentTypeValues.Center;
+                    else if (align == "right") paragraph.ParagraphProperties.Alignment = DocumentFormat.OpenXml.Drawing.TextAlignmentTypeValues.Right;
+                    else if (align == "justify") paragraph.ParagraphProperties.Alignment = DocumentFormat.OpenXml.Drawing.TextAlignmentTypeValues.Justified;
+                }
+
                 if (node.TryGetProperty("content", out var children))
                 {
                     foreach (var child in children.EnumerateArray())
@@ -942,7 +953,31 @@ namespace Cherry.Infrastructure.Services
                             {
                                 fontFamily = fontProp.GetString();
                             }
+                            if (attrs.TryGetProperty("fontSize", out var fontSizeProp))
+                            {
+                                var fsStr = fontSizeProp.GetString();
+                                if (!string.IsNullOrEmpty(fsStr))
+                                {
+                                    var numeric = new string(fsStr.Where(char.IsDigit).ToArray());
+                                    if (int.TryParse(numeric, out var fs))
+                                    {
+                                        runProps.FontSize = fs * 100;
+                                    }
+                                }
+                            }
                         }
+                        if (markType == "highlight" && mark.TryGetProperty("attrs", out var hAttrs))
+                        {
+                            if (hAttrs.TryGetProperty("color", out var hColorProp))
+                            {
+                                var hHex = hColorProp.GetString()?.Replace("#", "") ?? "FFFF00";
+                                runProps.AppendChild(new DocumentFormat.OpenXml.Drawing.Highlight(
+                                    new DocumentFormat.OpenXml.Drawing.RgbColorModelHex { Val = hHex }
+                                ));
+                            }
+                        }
+                        if (markType == "subscript") runProps.Baseline = -25000;
+                        if (markType == "superscript") runProps.Baseline = 30000;
                     }
                 }
 
@@ -1010,6 +1045,13 @@ namespace Cherry.Infrastructure.Services
                         index++;
                     }
                 }
+            }
+            else if (type == "horizontalRule")
+            {
+                var hrRun = new DocumentFormat.OpenXml.Drawing.Run(new DocumentFormat.OpenXml.Drawing.Text("________________________________________________"));
+                hrRun.RunProperties = new DocumentFormat.OpenXml.Drawing.RunProperties { FontSize = 800 }; // Subtle HR
+                paragraph.AppendChild(hrRun);
+                paragraph.AppendChild(new DocumentFormat.OpenXml.Drawing.Break());
             }
             else if (type == "image")
             {
