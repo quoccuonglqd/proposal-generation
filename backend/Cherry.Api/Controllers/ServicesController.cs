@@ -99,6 +99,12 @@ namespace Cherry.Api.Controllers
             };
 
             _context.Services.Add(service);
+
+            if (request.RegionId.HasValue && request.LocalPrice.HasValue && request.UsdReferencePrice.HasValue)
+            {
+                await UpdateServicePrice(service.Id, request.RegionId.Value, request.LocalPrice.Value, request.UsdReferencePrice.Value);
+            }
+
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetServiceTree), new { id = service.Id }, service);
@@ -143,6 +149,11 @@ namespace Cherry.Api.Controllers
             service.SortOrder = request.SortOrder;
             service.IsActive = request.IsActive;
 
+            if (request.RegionId.HasValue && request.LocalPrice.HasValue && request.UsdReferencePrice.HasValue)
+            {
+                await UpdateServicePrice(service.Id, request.RegionId.Value, request.LocalPrice.Value, request.UsdReferencePrice.Value);
+            }
+
             await _context.SaveChangesAsync();
             return NoContent();
         }
@@ -151,8 +162,15 @@ namespace Cherry.Api.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpsertPrice([FromBody] UpsertPriceRequest request)
         {
+            await UpdateServicePrice(request.ServiceId, request.RegionId, request.LocalPrice, request.UsdReferencePrice);
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        private async Task UpdateServicePrice(Guid serviceId, Guid regionId, decimal localPrice, decimal usdReferencePrice)
+        {
             var existingPrice = await _context.ServicePrices
-                .FirstOrDefaultAsync(p => p.ServiceId == request.ServiceId && p.RegionId == request.RegionId && p.Status == "Active");
+                .FirstOrDefaultAsync(p => p.ServiceId == serviceId && p.RegionId == regionId && p.Status == "Active");
 
             if (existingPrice != null)
             {
@@ -162,18 +180,15 @@ namespace Cherry.Api.Controllers
 
             var newPrice = new ServicePrice
             {
-                ServiceId = request.ServiceId,
-                RegionId = request.RegionId,
-                LocalPrice = request.LocalPrice,
-                UsdReferencePrice = request.UsdReferencePrice,
-                EffectiveFrom = request.EffectiveFrom,
+                ServiceId = serviceId,
+                RegionId = regionId,
+                LocalPrice = localPrice,
+                UsdReferencePrice = usdReferencePrice,
+                EffectiveFrom = DateTime.UtcNow,
                 Status = "Active"
             };
 
             _context.ServicePrices.Add(newPrice);
-            await _context.SaveChangesAsync();
-
-            return Ok();
         }
 
         [HttpDelete("{id}")]

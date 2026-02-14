@@ -89,7 +89,6 @@ function ServiceRow({
                     <Checkbox
                         checked={isSelected}
                         onChange={() => onSelect(node)}
-                        disabled={hasChildren && node.level !== 'RANGE'}
                     />
                 </ListItemIcon>
                 <ListItemText

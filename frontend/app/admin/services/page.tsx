@@ -63,7 +63,12 @@ export default function ServicesPricing() {
     const handleSaveService = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await catalogApi.upsertService(editingService);
+            await catalogApi.upsertService({
+                ...editingService,
+                regionId: selectedRegionId,
+                localPrice: editingService.localPrice,
+                usdReferencePrice: editingService.usdReferencePrice
+            });
             setEditorOpen(false);
             fetchTree(selectedRegionId);
             setToast({ open: true, message: 'Service saved', severity: 'success' });
@@ -138,10 +143,9 @@ export default function ServicesPricing() {
                                 setPricingForm({ local: s.price.local, usdRef: s.price.usdRef });
                                 setPricingOpen(true);
                             }}
-                            disabled={s.children?.length > 0}
-                            title={s.children?.length > 0 ? "Cannot price parent services" : "Manage Price"}
+                            title="Manage Price"
                         >
-                            <PriceIcon fontSize="small" color={s.children?.length > 0 ? "disabled" : "primary"} />
+                            <PriceIcon fontSize="small" color="primary" />
                         </IconButton>
 
                         {/* Add Child Button: Only for Main and Sub levels */}
@@ -155,7 +159,9 @@ export default function ServicesPricing() {
                                         level: s.level === 'MAIN' ? 'sub' : 'lineitem',
                                         parentId: s.id,
                                         sortOrder: s.children?.length || 0,
-                                        isActive: true
+                                        isActive: true,
+                                        localPrice: 0,
+                                        usdReferencePrice: 0
                                     });
                                     setEditorOpen(true);
                                 }}
@@ -166,7 +172,12 @@ export default function ServicesPricing() {
                         )}
 
                         <IconButton size="small" onClick={() => {
-                            setEditingService({ ...s, level: s.level.toLowerCase() });
+                            setEditingService({
+                                ...s,
+                                level: s.level.toLowerCase(),
+                                localPrice: s.price?.local || 0,
+                                usdReferencePrice: s.price?.usdRef || 0
+                            });
                             setEditorOpen(true);
                         }}>
                             <EditIcon fontSize="small" />
@@ -212,7 +223,14 @@ export default function ServicesPricing() {
                         </Select>
                     </FormControl>
                     <Button variant="contained" startIcon={<AddIcon />} onClick={() => {
-                        setEditingService({ name: '', level: 'main', sortOrder: 0, isActive: true });
+                        setEditingService({
+                            name: '',
+                            level: 'main',
+                            sortOrder: 0,
+                            isActive: true,
+                            localPrice: 0,
+                            usdReferencePrice: 0
+                        });
                         setEditorOpen(true);
                     }}>
                         Add Service
@@ -264,6 +282,25 @@ export default function ServicesPricing() {
                                     <MenuItem value="lineitem">Line Item (Level 3)</MenuItem>
                                 </Select>
                             </FormControl>
+
+                            <Divider sx={{ my: 1 }}>Initial Pricing ({regions.find(r => r.id === selectedRegionId)?.name})</Divider>
+
+                            <Stack direction="row" spacing={2}>
+                                <TextField
+                                    label={`Local Price (${regions.find(r => r.id === selectedRegionId)?.localCurrency})`}
+                                    fullWidth
+                                    type="number"
+                                    value={editingService?.localPrice || 0}
+                                    onChange={(e) => setEditingService({ ...editingService, localPrice: parseFloat(e.target.value) || 0 })}
+                                />
+                                <TextField
+                                    label="USD Reference Price"
+                                    fullWidth
+                                    type="number"
+                                    value={editingService?.usdReferencePrice || 0}
+                                    onChange={(e) => setEditingService({ ...editingService, usdReferencePrice: parseFloat(e.target.value) || 0 })}
+                                />
+                            </Stack>
                         </Stack>
                     </DialogContent>
                     <DialogActions sx={{ p: 3 }}>
