@@ -650,16 +650,16 @@ namespace Cherry.Infrastructure.Services
             return $@"
 <p:grpSp xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main"" xmlns:p=""http://schemas.openxmlformats.org/presentationml/2006/main"">
   <p:nvGrpSpPr><p:cNvPr id=""{(uint)Guid.NewGuid().GetHashCode()}"" name=""row""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>
-  <p:grpSpPr><a:xfrm><a:off x=""155325"" y=""{y}""/><a:ext cx=""11881697"" cy=""420000""/><a:chOff x=""232987"" y=""{y}""/><a:chExt cx=""17822545"" cy=""420000""/></a:xfrm></p:grpSpPr>
+  <p:grpSpPr><a:xfrm><a:off x=""232981"" y=""{y}""/><a:ext cx=""17822545"" cy=""420000""/><a:chOff x=""232981"" y=""{y}""/><a:chExt cx=""17822545"" cy=""420000""/></a:xfrm></p:grpSpPr>
   {rectXml}
-  {CreateTextboxXml(440670, y, 2973434, row.DisplayName, textColor, row.Level == ServiceLevel.Main, fontSize)}
-  {CreateTextboxXml(3667872, y, 2491419, VND, textColor, false, fontSize)}
-  {CreateTextboxXml(6159291, y, 2491419, USD, textColor, false, fontSize)}
-  {CreateTextboxXml(8650710, y, 2973434, "", textColor, false, fontSize)}
+  {CreateTextboxXml(600000, y, 6500000, row.DisplayName, textColor, row.Level == ServiceLevel.Main, fontSize, "l")}
+  {CreateTextboxXml(6500000, y, 2800000, VND, textColor, false, fontSize, "ctr")}
+  {CreateTextboxXml(9000000, y, 2800000, USD, textColor, false, fontSize, "ctr")}
+  {CreateTextboxXml(13000000, y, 3800000, "", textColor, false, fontSize, "l")}
 </p:grpSp>";
         }
 
-        private string CreateTextboxXml(long x, long y, long cx, string text, string color, bool bold, int sz = 1100)
+        private string CreateTextboxXml(long x, long y, long cx, string text, string color, bool bold, int sz = 1100, string algn = "ctr")
         {
             return $@"
 <p:sp>
@@ -668,7 +668,7 @@ namespace Cherry.Infrastructure.Services
   <p:txBody>
     <a:bodyPr wrap=""none"" rtlCol=""0""><a:spAutoFit/></a:bodyPr>
     <a:p>
-      <a:pPr algn=""ctr""/>
+      <a:pPr algn=""{algn}""/>
       <a:r>
         <a:rPr sz=""{sz}"" b=""{(bold ? "1" : "0")}""><a:solidFill><a:srgbClr val=""{color}""/></a:solidFill><a:latin typeface=""Arial""/></a:rPr>
         <a:t>{SecurityElement.Escape(text)}</a:t>
