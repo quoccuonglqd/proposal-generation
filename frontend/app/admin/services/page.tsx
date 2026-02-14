@@ -264,13 +264,6 @@ export default function ServicesPricing() {
                                     <MenuItem value="lineitem">Line Item (Level 3)</MenuItem>
                                 </Select>
                             </FormControl>
-                            <TextField
-                                label="Sort Order"
-                                type="number"
-                                fullWidth
-                                value={editingService?.sortOrder || 0}
-                                onChange={(e) => setEditingService({ ...editingService, sortOrder: parseInt(e.target.value) })}
-                            />
                         </Stack>
                     </DialogContent>
                     <DialogActions sx={{ p: 3 }}>
