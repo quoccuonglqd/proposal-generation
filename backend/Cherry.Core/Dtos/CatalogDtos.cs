@@ -23,7 +23,10 @@ namespace Cherry.Core.Dtos
         string Name, 
         string? Unit,
         int SortOrder, 
-        bool IsActive = true
+        bool IsActive = true,
+        Guid? RegionId = null,
+        decimal? LocalPrice = null,
+        decimal? UsdReferencePrice = null
     );
 
     public record UpsertPriceRequest(
